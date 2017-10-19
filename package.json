@@ -1,0 +1,28 @@
+{
+  "name": "parasails",
+  "version": "0.3.0",
+  "description": "Lightweight structures for apps with more than one page.",
+  "author": "Mike McNeil",
+  "keywords": [
+    "parasails",
+    "vue.js-framework",
+    "component-framework",
+    "vue.js",
+    "ui",
+    "vue",
+    "browser",
+    "sails"
+  ],
+  "license": "MIT",
+  "dependencies": {},
+  "main": "dist/parasails.js",
+  "unpkg": "dist/parasails.js",
+  "jsdelivr": "dist/parasails.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikermcneil/parasails.git"
+  }
+}
