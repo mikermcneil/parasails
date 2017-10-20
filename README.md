@@ -19,7 +19,7 @@ As well as a few optional integrations:
 
 
 ```html
-<div id="homepage" v-cloak">
+<div id="homepage" v-cloak>
   <h1>{{welcomeMessage}}</h1>
   <button autofocus @click="clickButton()">Click me</button>
 </div>
