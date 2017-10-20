@@ -34,6 +34,17 @@ parasails.registerPage('homepage', {
 ```
 
 
+Out of the box, parasails supports:
+ - pages
+ - components
+ - utilities
+ - constants
+
+As well as a few optional integrations:
+ - Vue Router (for client-side routing / "virtual pages")
+ - jQuery (for `this.$get()`, `this.$find()`, and `this.$focus()`)
+
+
 ## Help
 
 Have questions?  Need advice?  Want to contribute?  Come by and [say hello](https://sailsjs.com/support)!
@@ -41,18 +52,8 @@ Have questions?  Need advice?  Want to contribute?  Come by and [say hello](http
 > Parasails is developed by Mike McNeil, with help from other [Sails.js](https://sailsjs.com) core team members in Austin, TX.  If you're working on a commercial project and are interested in ways we can work together, [drop us a line](https://sailsjs.com/studio).
 
 
+<!--
 ## More examples
-
-Out of the box, parasails supports:
- • pages
- • components
- • utilities
- • constants
-
-As well as the following optional features:
- • client-side routing
- • jQuery integration
-
 
 #### Pages
 
@@ -231,6 +232,7 @@ var getHelloMessage = parasails.require('getHelloMessage');
 console.log(getHelloMessage('Joaquin'));
 ```
 
+-->
 
 ## License
 
