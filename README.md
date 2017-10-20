@@ -7,6 +7,17 @@ While it can be used with any module system, this library does not rely on Webpa
 
 ## Usage
 
+Out of the box, parasails supports:
+ - pages
+ - components
+ - utilities
+ - constants
+
+As well as a few optional integrations:
+ - Vue Router (for client-side routing / "virtual pages")
+ - jQuery (for `this.$get()`, `this.$find()`, and `this.$focus()`)
+
+
 ```html
 <div id="homepage" v-cloak">
   <h1>{{welcomeMessage}}</h1>
@@ -34,18 +45,7 @@ parasails.registerPage('homepage', {
 ```
 
 
-Out of the box, parasails supports:
- - pages
- - components
- - utilities
- - constants
-
-As well as a few optional integrations:
- - Vue Router (for client-side routing / "virtual pages")
- - jQuery (for `this.$get()`, `this.$find()`, and `this.$focus()`)
-
-
-## Help
+## Jumping off
 
 Have questions?  Need advice?  Want to contribute?  Come by and [say hello](https://sailsjs.com/support)!
 
