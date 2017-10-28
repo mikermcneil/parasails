@@ -1,6 +1,6 @@
 /**
  * parasails.js
- * v0.3.4
+ * v0.3.5
  *
  * Copyright 2017, Mike McNeil (@mikermcneil)
  * MIT License
