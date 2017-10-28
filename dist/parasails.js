@@ -169,36 +169,49 @@
         throw new Error('Unexpected definition for Vue method `'+methodName+'`.  Vue methods cannot be specified as arrow functions, because then you wouldn\'t have access to `this` (i.e. the Vue vm instance).  Please use a function like `function(){…}` instead.');
       }
 
-      // Inject a wrapper function in order to decorate errors, and provide cleaner handling
-      // for AsyncFunctions.
-      var _originalMethod = def.methods[methodName];
-      def.methods[methodName] = function(){
-        if (_originalMethod.constructor.name === 'AsyncFunction') {
-
-          var promise;
-          try {
-            promise = _originalMethod.apply(this, arguments);
-          } catch (err) {
-            if (err.name === 'EarlyReturnSignal') { return; }// «TODO: probably remove this
-            throw err;
-          }
-
-          promise.catch(function(err) {
-            if (err.name === 'EarlyReturnSignal') { /* … */ }// «TODO: probably remove this
-            else { throw err; }
-          });
-
-          return promise;
-        }
-        else {
-          try {
-            return _originalMethod.apply(this, arguments);
-          } catch (err) {
-            if (err.name === 'EarlyReturnSignal') { return; }// «TODO: probably remove this
-            throw err;
-          }
-        }
-      };//ƒ
+      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      // FUTURE:
+      // Inject a wrapper function in order to provide more advanced / cleaner error handling.
+      // (especially for AsyncFunctions)
+      // ```
+      // var _originalMethod = def.methods[methodName];
+      // def.methods[methodName] = function(){
+      //
+      //   var rawResult;
+      //   var originalCtx = this;
+      //   (function(proceed){
+      //     if (_originalMethod.constructor.name === 'AsyncFunction') {
+      //       rawResult = _originalMethod.apply(originalCtx, arguments);
+      //       // The result of an AsyncFunction is always a promise:
+      //       rawResult.catch(function(err) {
+      //         proceed(err);
+      //       });//_∏_
+      //       rawResult.then(function(actualResult){
+      //         return proceed(undefined, actualResult);
+      //       });
+      //     }
+      //     else {
+      //       try {
+      //         rawResult = _originalMethod.apply(originalCtx, arguments);
+      //       } catch (err) { return proceed(err); }
+      //       return proceed(undefined, rawResult);
+      //     }
+      //   })(function(err, actualResult){//eslint-disable-line no-unused-vars
+      //     if (err) {
+      //       // FUTURE: perform more advanced error handling here
+      //       throw err;
+      //     }
+      //
+      //     // Otherwise do nothing.
+      //
+      //   });//_∏_  (†)
+      //
+      //   // For compatibility, return the raw result.
+      //   return rawResult;
+      //
+      // };//ƒ
+      // ```
+      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
     });//∞
@@ -378,7 +391,7 @@
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // TODO: Make sure we didn't type "beforeMounted" or "beforeDestroyed" because those aren't real things
+    // FUTURE: Make sure we didn't type "beforeMounted" or "beforeDestroyed" because those aren't real things
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
