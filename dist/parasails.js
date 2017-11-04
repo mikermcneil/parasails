@@ -1,9 +1,11 @@
 /**
  * parasails.js
  * v0.3.5
- *
+ * 
  * Copyright 2017, Mike McNeil (@mikermcneil)
  * MIT License
+ * https://www.npmjs.com/package/parasails
+ * https://sailsjs.com/support
  */
 (function(global, factory){
   var Vue;
