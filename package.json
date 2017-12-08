@@ -16,7 +16,6 @@
   ],
   "license": "MIT",
   "dependencies": {},
-  "main": "dist/parasails.js",
   "unpkg": "dist/parasails.js",
   "jsdelivr": "dist/parasails.js",
   "scripts": {
