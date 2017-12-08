@@ -10,6 +10,7 @@
     "vue.js",
     "ui",
     "vue",
+    "sails.js",
     "browser",
     "sails"
   ],
@@ -19,7 +20,14 @@
   "unpkg": "dist/parasails.js",
   "jsdelivr": "dist/parasails.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "sandbox": "node -i -e 'global[require(\"./package.json\").name] = require(\"./\"); console.log(\"\\n\\n\\n\\n--\");'",
+    "test": "npm run lint && npm run custom-tests",
+    "custom-tests": "node ./node_modules/mocha/bin/mocha -R spec",
+    "lint": "node ./node_modules/eslint/bin/eslint . --max-warnings=0 && echo '✔  Your code looks good.'"
+  },
+  "devDependencies": {
+    "eslint": "4.11.0",
+    "mocha": "3.0.2"
   },
   "repository": {
     "type": "git",

@@ -1,7 +1,7 @@
 /**
  * parasails.js
- * v0.3.5
- * 
+ * v0.3.6
+ *
  * Copyright 2017, Mike McNeil (@mikermcneil)
  * MIT License
  * https://www.npmjs.com/package/parasails
@@ -118,13 +118,13 @@
 
   function _ensureGlobalCache(){
     parasails._cache = parasails._cache || {};
-  };
+  }
 
   function _exportOnGlobalCache(moduleName, moduleDefinition){
     _ensureGlobalCache();
     if (parasails._cache[moduleName]) { throw new Error('Something else (e.g. a utility or constant) has already been registered under that name (`'+moduleName+'`)'); }
     parasails._cache[moduleName] = moduleDefinition;
-  };
+  }
 
   function _exposeJQueryPoweredMethods(def, currentModuleEntityNoun){
     if (!currentModuleEntityNoun) { throw new Error('Consistency violation: Bad internal usage. '); }
@@ -150,7 +150,7 @@
       def.methods.$find = function (){ throw new Error('Cannot use .$find() method because, at the time when this '+currentModuleEntityNoun+' was registered, jQuery (`$`) did not exist on the page yet.  (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure jQuery is getting brought in before `parasails`.)'); };
       def.methods.$focus = function (){ throw new Error('Cannot use .$focus() method because, at the time when this '+currentModuleEntityNoun+' was registered, jQuery (`$`) did not exist on the page yet.  (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure jQuery is getting brought in before `parasails`.)'); };
     }
-  };
+  }
 
   function _wrapMethodsAndVerifyNoArrowFunctions(def){
     def.methods = def.methods || {};
@@ -217,7 +217,7 @@
 
 
     });//∞
-  };
+  }
 
 
   //  ███████╗██╗  ██╗██████╗  ██████╗ ██████╗ ████████╗███████╗
@@ -279,7 +279,10 @@
     if (!constantName) { throw new Error('1st argument (constant name) is required'); }
     if (value === undefined) { throw new Error('2nd argument (the constant value) is required'); }
 
-    // > FUTURE: freeze constant, if supported
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // FUTURE: deep-freeze constant, if supported
+    // (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze)
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     // Attach to global cache
     _exportOnGlobalCache(constantName, value);
@@ -358,7 +361,7 @@
     if (!def) { throw new Error('2nd argument (page script definition) is required'); }
 
     // Only actually build+load this page script if it is relevant for the current contents of the DOM.
-    if (!document.getElementById(pageName)) { return; }
+    if (!document.getElementById(pageName)) { return; }//eslint-disable-line no-undef
 
     // Spinlock
     if (didAlreadyLoadPageScript) { throw new Error('Cannot load page script (`'+pageName+') because a page script has already been loaded on this page.'); }
@@ -419,7 +422,6 @@
         if (!def.virtualPagesRegExp && def.html5HistoryMode === 'history') { throw new Error('If `html5HistoryMode: \'history\'` is specified, then virtualPagesRegExp must also be specified!'); }
         if (def.virtualPagesRegExp && !_.isRegExp(def.virtualPagesRegExp)) { throw new Error('Invalid `virtualPagesRegExp`: If specified, this must be a regular expression -- e.g. `/^\/manage\/access\/?([^\/]+)?/`'); }
 
-
         // Check for <router-view> element
         // (to provide a better error msg if it was omitted)
         var customBeforeMountLC;
@@ -451,11 +453,27 @@
         if (def.methods._navigate) {
           throw new Error('Could not use `virtualPages: true`, because a conflicting `_navigate` method is defined.  Please remove it, or do something else.');
         }
+
+        // Set up local variables to refer to things in `def`, since it will be changing below.
+        var pathMatchingRegExp;
+        if (def.html5HistoryMode === 'history') {
+          pathMatchingRegExp = def.virtualPagesRegExp;
+        } else {
+          pathMatchingRegExp = /.*/;
+        }
+
+        var beforeNavigate = def.beforeNavigate;
+        var afterNavigate = def.afterNavigate;
+
+        // Now modify the definition's methods and remove all relevant top-level props understood
+        // by parasails (but not by Vue.js) to avoid creating any weird additional dependence on
+        // parasails features beyond the expected usage.
+
         def.methods = _.extend(def.methods||{}, {
           _navigate: function(virtualPageSlug){
 
-            if (def.beforeNavigate) {
-              var doCancelNavigate = def.beforeNavigate.apply(this, [ virtualPageSlug ]);
+            if (beforeNavigate) {
+              var doCancelNavigate = beforeNavigate.apply(this, [ virtualPageSlug ]);
               if (doCancelNavigate === false) {
                 return;
               }//•
@@ -466,8 +484,8 @@
             // console.log('navigate!  Got:', arguments);
             // console.log('Navigated. (Set `this.virtualPageSlug=\''+virtualPageSlug+'\'`)');
 
-            if (def.afterNavigate) {
-              def.afterNavigate.apply(this, [ virtualPageSlug ]);
+            if (afterNavigate) {
+              afterNavigate.apply(this, [ virtualPageSlug ]);
             }
 
           }
@@ -485,7 +503,7 @@
                     beforeRouteUpdate: function (to,from,next){
                       // this.$emit('navigate', to.path); <<old way
                       var path = to.path;
-                      var matches = path.match(def.virtualPagesRegExp||/.*/);
+                      var matches = path.match(pathMatchingRegExp);
                       if (!matches) { throw new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`'); }
                       // console.log('this.$parent', this.$parent);
                       this.$parent._navigate(matches[1]||'');
@@ -496,12 +514,10 @@
                       return next();
                     },
                     mounted: function(){
-
                       // this.$emit('navigate', this.$route.path); <<old way
                       var path = this.$route.path;
-                      var matches = path.match(def.virtualPagesRegExp||/.*/);
+                      var matches = path.match(pathMatchingRegExp);
                       if (!matches) { throw new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`'); }
-                      // console.log('this.$parent', this.$parent);
                       this.$parent._navigate(matches[1]||'');
                       // this.$emit('navigate', {
                       //   rawPath: path,
