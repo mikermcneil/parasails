@@ -18,6 +18,11 @@
  * Step 2:
  *
  * ```
+ * var result = await Cloud.doSomething(8);
+ * ```
+ *
+ * Or:
+ * ```
  * var result = await Cloud.doSomething.with({id: 8, foo: ['bar', 'baz']});
  * ```
  * ---------------------------------------------------------------------------------------------
@@ -198,6 +203,9 @@
    * ```
    * Cloud.setup({
    *   apiBaseUrl: 'https://example.com',
+   *   usageOpts: {
+   *     arginStyle: 'serial'
+   *   },
    *   methods: {
    *     doSomething: 'PUT /api/v1/projects/:id',
    *     // ...
@@ -209,6 +217,15 @@
    * > (Technically, it should work anyway though.  But yeah, no reason to tempt the fates.)
    *
    * ### Basic Usage
+   *
+   * ```
+   * var user = await Cloud.findOneUser(3);
+   * ```
+   *
+   * ```
+   * var user = await Cloud.findOneUser.with({ id: 3 });
+   * ```
+   *
    * ```
    * Cloud.doSomething.with({
    *   someParam: ['things', 3235, null, true, false, {}, []]
@@ -418,7 +435,7 @@
 
       // Build the actual method that will be called at runtime:
       ////////////////////////////////////////////////////////////////////////
-      memo[methodName] = function (argins) {
+      var _helpCallCloudMethod = function (argins) {
 
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
         // There are 3 ways to define an SDK wrapper for a cloud endpoint.
@@ -1538,7 +1555,7 @@
         //   protocol: 'io.socket',//optional, defaults to 'jQuery'
         //   headers: {'x-auth': 'foo'},//optional, defaults to undefined
         // }
-        else if (typeof appLevelSdkEndpointDef === 'object') {
+        else if (appLevelSdkEndpointDef && typeof appLevelSdkEndpointDef === 'object') {
           if (!_.isUndefined(appLevelSdkEndpointDef.headers)) {
             deferred.headers(appLevelSdkEndpointDef.headers);
           }
@@ -1643,8 +1660,69 @@
         // Return the deferred object.
         return deferred;
 
-      };//</ definition of this Cloud.* method()>
+      };//ƒ  </ _helpCallCloudMethod >
 
+      // Primary definition of this Cloud.* method()
+      memo[methodName] = function () {
+
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // FUTURE: If no `args` configured, then check route params (url pattern
+        // variables).  If there are any, attempt to use their names... maybe?
+        // Could actually be MORE confusing though-- needs to be played with.
+        //
+        // UPDATE: OK probably best not to do this actually.
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        if (!appLevelSdkEndpointDef.args && arguments.length > 0) {
+          throw new Error(
+            'Cannot call this Cloud.*() method with serial usage because Cloud SDK is not aware of the appropriate parameter names!  Please pass in named parameter values using .with({…}) instead--or if you\'re the implementor of the corresponding Sails action, change it on the backend and regenerate the SDK so that this method is configured with an `args` array.\n'+
+            ' [?] If you\'re unsure, visit https://sailsjs.com/support for help.'
+          );
+        }
+
+        // Parse arguments into argins
+        var argins = _.reduce(arguments, function(argins, argin, i){
+
+          if (!(appLevelSdkEndpointDef.args[i])) {
+            throw new Error('Invalid usage with serial arguments: Received unexpected '+(i===0?'first':i===1?'second':i===2?'third':(i+1)+'th')+' argument.');
+          }
+
+          // Reject special notation.
+          // > Remember, if we made it to this point, we know it's valid b/c it's already been checked.
+          if (appLevelSdkEndpointDef.args[i] === '{*}') {
+            if (argin !== undefined && (!_.isObject(argin) || _.isArray(argin) || _.isFunction(argin))) {
+              throw new Error('Invalid usage with serial arguments: If provided, expected '+(i===0?'first':i===1?'second':i===2?'third':(i+1)+'th')+' argument to be a dictionary (plain JavaScript object, like `{}`).  But instead, got: '+argin+'');
+            } else if (argin !== undefined && _.intersection(_.keys(argins), _.keys(argin)).length > 0) {
+              throw new Error('Invalid usage with serial arguments: If provided, expected '+(i===0?'first':i===1?'second':i===2?'third':(i+1)+'th')+' argument to have keys which DO NOT overlap with other already-configured argins!  But in reality, it contained conflicting keys: '+_.intersection(_.keys(argins), _.keys(argin))+'');
+            }
+            _.extend(argins, argin);
+          } else {
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            // Note: For design considerations & historical context, see:
+            // • https://github.com/node-machine/machine/commit/fa3829fa637a267793be4a7fb573e008581c4656
+            // • https://github.com/node-machine/spec/pull/2/files#diff-eba3c42d87dad8fb42b4080df85facec
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            // FUTURE: Support declaring variadic usage
+            // https://github.com/node-machine/spec/pull/2/files#diff-eba3c42d87dad8fb42b4080df85facecR58
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            // FUTURE: Support declaring spread arguments
+            // https://github.com/node-machine/spec/pull/2/files#diff-eba3c42d87dad8fb42b4080df85facecR66
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            // Otherwise interpret this as the code name of an input
+            argins[appLevelSdkEndpointDef.args[i]] = argin;
+          }
+
+          return argins;
+
+        }, {});//= (∞)
+
+        return _helpCallCloudMethod(argins);
+
+      };//ƒ
+
+      // Escape hatch that always allows using named parameters.
+      memo[methodName].with = function (argins) {
+        return _helpCallCloudMethod(argins);
+      };//ƒ
 
       return memo;
     }, {});//</ _.reduce() :: each defined endpoint method >
