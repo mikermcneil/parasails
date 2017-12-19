@@ -1,6 +1,10 @@
 /**
  * cloud.js
- * v1.0.1
+ * (high-level AJAX library)
+ *
+ * > This is now part of parasails.  Originally branched from the original
+ * > Cloud SDK library at v1.0.1.  (All future development of Cloud SDK will be
+ * > as part of parasails.)
  *
  * Copyright (c) 2015-2017, Mike McNeil, Scott Gress, Sails Co. (https://sailsjs.com/about)
  * Copyright (c) 2014, Mike McNeil, Balderdash Design Co. (http://balderdash.co)
