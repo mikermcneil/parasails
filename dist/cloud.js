@@ -18,7 +18,7 @@
  * Step 2:
  *
  * ```
- * var result = await Cloud.doSomething({id: 8, foo: ['bar', 'baz']});
+ * var result = await Cloud.doSomething.with({id: 8, foo: ['bar', 'baz']});
  * ```
  * ---------------------------------------------------------------------------------------------
  */
@@ -210,7 +210,7 @@
    *
    * ### Basic Usage
    * ```
-   * Cloud.doSomething({
+   * Cloud.doSomething.with({
    *   someParam: ['things', 3235, null, true, false, {}, []]
    *   someOtherParam: 2523,
    *   etc: 'more things'
@@ -226,7 +226,7 @@
    *
    * ### Negotiating Errors
    * ```
-   * Cloud.signup(...)
+   * Cloud.signup.with({...})
    * .switch({
    *   error: function (err) { ... },
    *   usernameAlreadyInUse: function (recommendedAlternativeUsernames) { ... },
@@ -237,13 +237,13 @@
    *
    * ### Using WebSockets
    * ```
-   * Cloud.doSomething(...)
+   * Cloud.doSomething.with({...})
    * .protocol('jQuery')
    * .exec(...);
    * ```
    *
    * ```
-   * Cloud.doSomething(...)
+   * Cloud.doSomething.with({...})
    * .protocol('io.socket')
    * .exec(...);
    * ```
@@ -251,20 +251,20 @@
    * ##### Providing a particular jQuery or SailsSocket instance
    *
    * ```
-   * Cloud.doSomething(...)
+   * Cloud.doSomething.with({...})
    * .protocol(io.socket)
    * .exec(...);
    * ```
    *
    * ```
-   * Cloud.doSomething(...)
+   * Cloud.doSomething.with({...})
    * .protocol($)
    * .exec(...);
    * ```
    *
    * ### Using Custom Headers
    * ```
-   * Cloud.doSomething(...)
+   * Cloud.doSomething.with({...})
    * .headers({
    *   'X-Auth': 'whatever'
    * })
