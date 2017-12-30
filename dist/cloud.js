@@ -547,13 +547,12 @@
                 requestInfo.protocolName = 'io.socket';
                 requestInfo.protocolInstance = _protocolNameOrInstance;
               }
-              else if (_protocolNameOrInstance.toString() === '[Package: machinepack-http]') {
+              else if (_protocolNameOrInstance.toString() === '[Package: machinepack-http]' || _protocolNameOrInstance.toString() === '[Package: sails.helpers.http]') {
                 requestInfo.protocolName = 'machinepack-http';
                 requestInfo.protocolInstance = _protocolNameOrInstance;
               }
-              // FUTURE: maybe "axios"?
-              // FUTURE: maybe "fetch"?
-              // FUTURE: maybe "request"?
+              // FUTURE: maybe native browser "fetch"?
+              // FUTURE: maybe native Node "http"?
               else {
                 throw new Error('Unrecognized instance provided to `.protocol()`: `'+_protocolNameOrInstance+'`');
               }
@@ -972,7 +971,6 @@
                 //  ██║╚██╔╝██║██╔═══╝ ╚════╝██╔══██║   ██║      ██║   ██╔═══╝
                 //  ██║ ╚═╝ ██║██║           ██║  ██║   ██║      ██║   ██║
                 //  ╚═╝     ╚═╝╚═╝           ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝
-                //
                 case 'machinepack-http': return (function _doAjaxWithMpHttp(){
 
                   // If `File` constructor is available, check to be sure
@@ -983,7 +981,7 @@
                   if (File && requestInfo.params) {
                     _.each(requestInfo.params, function(value, fieldName){
                       if (_.isObject(value) && value instanceof File) {
-                        throw new Error('Detected File instance provided for the `'+fieldName+'` parameter -- but file uploads are not currently supported using machinepack-http.  Please call this method using a different request protocol.');
+                        throw new Error('Detected File instance provided for the `'+fieldName+'` parameter -- but file uploads are not currently supported using this "http" pack.  Please call this method using a different request protocol.');
                       }
                     });
                   }//ﬁ
@@ -1006,7 +1004,7 @@
                     mpHttpOpts.headers = requestInfo.headers;
                   }
 
-                  requestInfo.protocolInstance.sendHttpRequest(mpHttpOpts)
+                  requestInfo.protocolInstance.sendHttpRequest.with(mpHttpOpts)
                   .switch({
                     error: function (err) {
                       return proceed(err);
