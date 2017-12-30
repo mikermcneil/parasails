@@ -1,6 +1,6 @@
 {
   "name": "parasails",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Lightweight structures for apps with more than one page.",
   "author": "Mike McNeil",
   "keywords": [
