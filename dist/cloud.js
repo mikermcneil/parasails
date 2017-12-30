@@ -100,8 +100,16 @@
       // FUTURE: figure out a way to provide a better err msg about this--
       // i.e. specifically the case where `.setup()` isn't called within one tick.
       // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
+    } catch (err) {
+      if (err.code === 'MODULE_NOT_FOUND') {
+        // that's ok-- just make sure and unwind any vars that might have
+        // gotten partially set up, since we attempted to require more than
+        // one thing above (and e.g. the second `require()` might have failed)
+        io = undefined;
+      } else {
+        throw err;
+      }
+    }
 
     SAILS_LOCALS = undefined;
 
