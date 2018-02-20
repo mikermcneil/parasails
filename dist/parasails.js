@@ -2,7 +2,7 @@
  * parasails.js
  * (lightweight structures for apps with more than one page)
  *
- * v0.5.3
+ * v0.5.4-0
  *
  * Copyright 2017-2018, Mike McNeil (@mikermcneil)
  * MIT License
@@ -131,12 +131,22 @@
     parasails._cache[moduleName] = moduleDefinition;
   }
 
-  function _exposeJQueryPoweredMethods(def, currentModuleEntityNoun){
+  function _exposeBonusMethods(def, currentModuleEntityNoun){
     if (!currentModuleEntityNoun) { throw new Error('Consistency violation: Bad internal usage. '); }
     if (def.methods && def.methods.$get) { throw new Error('This '+currentModuleEntityNoun+' contains `methods` with a `$get` key, but you\'re not allowed to override that'); }
     if (def.methods && def.methods.$find) { throw new Error('This '+currentModuleEntityNoun+' contains `methods` with a `$find` key, but you\'re not allowed to override that'); }
     if (def.methods && def.methods.$focus) { throw new Error('This '+currentModuleEntityNoun+' contains `methods` with a `$focus` key, but you\'re not allowed to override that'); }
+    if (def.methods && def.methods.forceRender) { throw new Error('This '+currentModuleEntityNoun+' contains `methods` with a `forceRender` key, but you\'re not allowed to override that'); }
     def.methods = def.methods || {};
+
+    // Attach misc. methods:
+    def.methods.forceRender = function (){
+      this.$forceUpdate();
+      var promise = this.$nextTick();
+      return promise;
+    };//ƒ
+
+    // Attach jQuery-powered methods:
     if ($) {
       def.methods.$get = function (){ return $(this.$el); };
       def.methods.$find = function (subSelector){ return $(this.$el).find(subSelector); };
@@ -310,7 +320,7 @@
   parasails.registerComponent = function(componentName, def){
 
     // Expose extra methods on component def, if jQuery is available.
-    _exposeJQueryPoweredMethods(def, 'component');
+    _exposeBonusMethods(def, 'component');
 
     // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
     _wrapMethodsAndVerifyNoArrowFunctions(def);
@@ -377,7 +387,7 @@
     def.el = '#'+pageName;
 
     // Expose extra methods, if jQuery is available.
-    _exposeJQueryPoweredMethods(def, 'page script');
+    _exposeBonusMethods(def, 'page script');
 
     // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
     _wrapMethodsAndVerifyNoArrowFunctions(def);
@@ -531,7 +541,7 @@
                     }
                   };
                   // Expose extra methods on virtual page script, if jQuery is available.
-                  _exposeJQueryPoweredMethods(vueComponentDef, 'virtual page');
+                  _exposeBonusMethods(vueComponentDef, 'virtual page');
 
                   // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
                   _wrapMethodsAndVerifyNoArrowFunctions(vueComponentDef);
@@ -569,7 +579,7 @@
                 routes: _.reduce(def.virtualPages, function(memo, vueComponentDef, urlPattern) {
 
                   // Expose extra methods on virtual page script, if jQuery is available.
-                  _exposeJQueryPoweredMethods(vueComponentDef, 'virtual page');
+                  _exposeBonusMethods(vueComponentDef, 'virtual page');
 
                   // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
                   _wrapMethodsAndVerifyNoArrowFunctions(vueComponentDef);
@@ -619,6 +629,8 @@
   };//ƒ
 
 
+
+
   // Attach an extra, built-in function.
   // > (The following code is taken from validator.js / anchor.)
   parasails.isValidEmailAddress = function(value){
@@ -639,6 +651,7 @@
     return!0}})()(value);
     /* eslint-enable */
   };
+
 
 
   return parasails;
