@@ -4,7 +4,7 @@
  *
  * v0.5.4-0
  *
- * Copyright 2017-2018, Mike McNeil (@mikermcneil)
+ * Copyright 2017-present, Mike McNeil (@mikermcneil)
  * MIT License
  * https://www.npmjs.com/package/parasails
  * https://sailsjs.com/support
