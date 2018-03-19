@@ -510,7 +510,7 @@
     _exposeBonusMethods(def, 'page script');
 
     // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
-    _wrapMethodsAndVerifyNoArrowFunctions(def);
+    _wrapMethodsAndVerifyNoArrowFunctions(def, 'page script');
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // FUTURE: Sniff with bowser and, if appropriate, attach a special mobile-only
