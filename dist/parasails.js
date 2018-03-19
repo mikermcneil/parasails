@@ -512,6 +512,11 @@
     // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
     _wrapMethodsAndVerifyNoArrowFunctions(def);
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // FUTURE: Sniff with bowser and, if appropriate, attach a special mobile-only
+    // class to the page element as well as the <body>
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     // Automatically attach `pageName` to `data`, for convenience.
     if (def.data && def.data.pageName) { throw new Error('Page script definition contains `data` with a `pageName` key, but you\'re not allowed to override that'); }
     def.data = _.extend({
@@ -529,11 +534,6 @@
     else {
       def.methods.goto = function (){ throw new Error('Cannot use .goto() method because, at the time when this page script was registered, VueRouter did not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure VueRouter is getting brought in before `parasails`.)'); };
     }
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // FUTURE: Make sure we didn't type "beforeMounted" or "beforeDestroyed" because those aren't real things
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 
     // If virtualPages was specified, check usage and then...
     if (def.virtualPages && def.router) { throw new Error('Cannot specify both `virtualPages` AND an actual Vue `router`!  Use one or the other.'); }
