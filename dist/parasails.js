@@ -167,7 +167,93 @@
     }
   }
 
-  function _wrapMethodsAndVerifyNoArrowFunctions(def){
+  function _wrapMethodsAndVerifyNoArrowFunctions(def, currentModuleEntityNoun){
+    if (!currentModuleEntityNoun) { throw new Error('Consistency violation: Bad internal usage. '); }
+
+    // Preliminary sanity check:
+    // Make sure top-level def doesn't have anything sketchy like "beforeMounted"
+    // or "beforeDestroyed", because those definitely aren't real things.
+    var RECOMMENDATIONS_BY_UNRECOGNIZED_KEY = {
+      beforeMounted: 'beforeMount',
+      beforeDestroyed: 'beforeDestroy',
+      events: 'methods',
+      functions: 'methods',
+      state: 'data'
+    };
+    _.each(_.intersection(_.keys(RECOMMENDATIONS_BY_UNRECOGNIZED_KEY),_.keys(def)), function (propertyName) {
+      if (def[propertyName] !== undefined) {
+        throw new Error('Detected unrecognized and potentially confusing key "'+propertyName+'" on the top level of '+currentModuleEntityNoun+' definition.  Did you mean "'+RECOMMENDATIONS_BY_UNRECOGNIZED_KEY[propertyName]+'"?');
+      }
+    });//∞
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // FUTURE: Maybe verify that neither beforeMount nor beforeDestroy are
+    // `async function`s.  (These must be synchronous!  And it's easy to forget.)
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    // In fact, in some cases, we'll go so far as to fail if we see any other
+    // unrecognized top-level keys too:
+    // > This is particularly useful for catching loose top-level properties
+    // > that were intended to be within `data` or `methods`, etc.)
+    if (currentModuleEntityNoun === 'page script' || currentModuleEntityNoun === 'component') {
+      var LEGAL_TOP_LVL_KEYS = [
+        // Everyday page script stuff:
+        'beforeMount',
+        'mounted',
+        'data',
+        'methods',
+
+        // Extra component stuff:
+        'props',
+        'template',
+        'beforeDestroy',
+
+        // Client-side router stuff:
+        'router',
+        'virtualPages',
+        'html5HistoryMode',
+        'beforeNavigate',
+        'afterNavigate',
+        'virtualPagesRegExp',
+
+        // Misc. & relatively more uncommon Vue.js stuff
+        'watch',
+        'computed',
+        'propsData',
+        'components',
+        'filters',
+        'directives',
+        'el',
+        'render',
+        'renderError',
+        'comments',
+        'inheritAttrs',
+        'model',
+        'functional',
+        'delimiters',
+        'name',
+        'beforeCreate',
+        'created',
+        'beforeUpdate',
+        'updated',
+        'activated',
+        'deactivated',
+        'destroyed',
+        'errorCaptured',
+        'parent',
+        'mixins',
+        'extends',
+        'provide',
+        'inject'
+      ];
+      _.each(_.difference(_.keys(def), LEGAL_TOP_LVL_KEYS), function (propertyName) {
+        if (def[propertyName] !== undefined) {
+          throw new Error('Detected unrecognized key "'+propertyName+'" on the top level of '+currentModuleEntityNoun+' definition.  Did you perhaps intend for `'+propertyName+'` to be included as a nested key within `data` or `methods`?  Please check on that and try again.  If you\'re unsure, or you\'re deliberately attempting to use a Vue.js feature that relies on having a top-level property named `'+propertyName+'`, then please remove this check from the parasails.js library in your project, or drop by https://sailsjs.com/support for assistance.');
+        }
+      });//∞
+    }//ﬁ
+
+    // Wrap and verify methods:
     def.methods = def.methods || {};
     _.each(_.keys(def.methods), function (methodName) {
       if (!_.isFunction(def.methods[methodName])) {
@@ -183,7 +269,7 @@
       }
 
       if (isArrowFunction) {
-        throw new Error('Unexpected definition for Vue method `'+methodName+'`.  Vue methods cannot be specified as arrow functions, because then you wouldn\'t have access to `this` (i.e. the Vue vm instance).  Please use a function like `function(){…}` instead.');
+        throw new Error('Unexpected definition for Vue method `'+methodName+'`.  Vue methods cannot be specified as arrow functions, because then you wouldn\'t have access to `this` (i.e. the Vue vm instance).  Please use a function like `function(){…}` or `async function(){…}` instead.');
       }
 
       // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -233,7 +319,6 @@
 
     });//∞
   }
-
 
   //  ███████╗██╗  ██╗██████╗  ██████╗ ██████╗ ████████╗███████╗
   //  ██╔════╝╚██╗██╔╝██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝██╔════╝
