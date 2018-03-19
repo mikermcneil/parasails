@@ -673,66 +673,69 @@
           })
         }, _.omit(def, ['virtualPages', 'virtualPagesRegExp', 'html5HistoryMode', 'beforeNavigate', 'afterNavigate']));
       }
-      // Otherwise, if a dictionary of `virtualPages` was specified, use those client-side
-      // routes to configure VueRouter.
       // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      // FUTURE: Re-evaluate this.  This usage will probably change!
+      // WARNING: Support for the following usage has been removed!
+      // ```
+      // Otherwise, if a dictionary of `virtualPages` was specified,
+      // use those client-side routes to configure VueRouter.
+      // ```
       // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       else if (_.isObject(def.virtualPages) && !_.isArray(def.virtualPages) && !_.isFunction(def.virtualPages)) {
-        if (def.virtualPagesRegExp) { throw new Error('Cannot use `virtualPagesRegExp` with current `virtualPages` setting.  To use the regexp, you must use `virtualPages: true`.'); }
+        throw new Error('This usage of `virtualPages` (as a dictionary) is no longer supported.  Instead, please use `virtualPages: true`.  [?] https://sailsjs.com/support');
+        // if (def.virtualPagesRegExp) { throw new Error('Cannot use `virtualPagesRegExp` with current `virtualPages` setting.  To use the regexp, you must use `virtualPages: true`.'); }
 
-        def = _.extend(
-          {
-            // Pass in `router`
-            router: (function(){
-              var newRouter = new VueRouter({
+        // def = _.extend(
+        //   {
+        //     // Pass in `router`
+        //     router: (function(){
+        //       var newRouter = new VueRouter({
 
-                // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-                // FUTURE: Consider binding popstate handler in order to intercept
-                // back/fwd button navigation / typing in the URL bar that would send
-                // the user to another URL under the same domain.  This would provide
-                // a slightly better user experience for certain cases.
-                // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        //         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        //         // FUTURE: Consider binding popstate handler in order to intercept
+        //         // back/fwd button navigation / typing in the URL bar that would send
+        //         // the user to another URL under the same domain.  This would provide
+        //         // a slightly better user experience for certain cases.
+        //         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-                mode: def.html5HistoryMode || 'hash',
+        //         mode: def.html5HistoryMode || 'hash',
 
-                routes: _.reduce(def.virtualPages, function(memo, vueComponentDef, urlPattern) {
+        //         routes: _.reduce(def.virtualPages, function(memo, vueComponentDef, urlPattern) {
 
-                  // Expose extra methods on virtual page script, if jQuery is available.
-                  _exposeBonusMethods(vueComponentDef, 'virtual page');
+        //           // Expose extra methods on virtual page script, if jQuery is available.
+        //           _exposeBonusMethods(vueComponentDef, 'virtual page');
 
-                  // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
-                  _wrapMethodsAndVerifyNoArrowFunctions(vueComponentDef);
+        //           // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
+        //           _wrapMethodsAndVerifyNoArrowFunctions(vueComponentDef, 'virtual page');
 
-                  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-                  // FUTURE: If urlPattern contains a url pattern variable (e.g. `:id`)
-                  // or wildcard "splat" (e.g. `*`), then log a warning reminding whoever
-                  // did it to be careful because of this:
-                  // https://router.vuejs.org/en/essentials/dynamic-matching.html#reacting-to-params-changes
-                  //
-                  // In other words, going between `/foo/3` and `/foo/4` doesn't work as expected.
-                  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        //           // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        //           // FUTURE: If urlPattern contains a url pattern variable (e.g. `:id`)
+        //           // or wildcard "splat" (e.g. `*`), then log a warning reminding whoever
+        //           // did it to be careful because of this:
+        //           // https://router.vuejs.org/en/essentials/dynamic-matching.html#reacting-to-params-changes
+        //           //
+        //           // In other words, going between `/foo/3` and `/foo/4` doesn't work as expected.
+        //           // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-                  memo.push({
-                    path: urlPattern,
-                    component: vueComponentDef
-                  });
+        //           memo.push({
+        //             path: urlPattern,
+        //             component: vueComponentDef
+        //           });
 
-                  return memo;
-                }, [])
-              });
+        //           return memo;
+        //         }, [])
+        //       });
 
-              if (def.beforeEach) {
-                newRouter.beforeEach(def.beforeEach);
-              }//ﬁ
+        //       if (def.beforeEach) {
+        //         newRouter.beforeEach(def.beforeEach);
+        //       }//ﬁ
 
-              return newRouter;
-            })(),
+        //       return newRouter;
+        //     })(),
 
 
-          },
-          _.omit(def, ['virtualPages', 'html5HistoryMode', 'beforeEach'])
-        );
+        //   },
+        //   _.omit(def, ['virtualPages', 'html5HistoryMode', 'beforeEach'])
+        // );
       }
       else {
         throw new Error('Cannot use `virtualPages` because the specified value doesn\'t match any recognized meaning.  Please specify either `true` (for the default handling) or a dictionary of client-side routing rules.');
