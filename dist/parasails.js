@@ -752,6 +752,28 @@
   };//ƒ
 
 
+  /**
+   * parasails.util.isMobile()
+   *
+   * Detect whether this being accessed from a mobile browser.
+   *
+   * > This just checks `bowser.mobile`, if available, for convenience.
+   *
+   * @returns {Boolean}
+   */
+  parasails.util.isMobile = function(){
+    // If `bowser` is not available, throw an error.
+    if(!bowser) {
+      throw new Error('Cannot detect browser, because `bowser` global does not exist on the page yet. '+
+        '(If you\'re using Sails, please check dependency loading order in pipeline.js and make sure '+
+        'the Bowser library is getting brought in before `parasails`. If you have not included Bowser '+
+        'in your project, you can find it at https://github.com/lancedikson/bowser/releases)');
+    }
+
+    return !!bowser.mobile;
+
+  };//ƒ
+
 
   /**
    * parasails.util.isValidEmailAddress()
