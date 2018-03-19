@@ -249,6 +249,16 @@
 
   parasails = {};
 
+  /**
+   * parasails.util
+   *
+   * Direct references to all registered utility methods from userland.
+   *
+   * @type {Dictionary}
+   */
+
+  parasails.util = {};
+
 
   /**
    * registerUtility()
@@ -274,6 +284,9 @@
 
     // Attach to global cache
     _exportOnGlobalCache(utilityName, callableUtility);
+
+    // Also expose on `parasails.util`
+    parasails.util[utilityName] = callableUtility;
 
   };
 
