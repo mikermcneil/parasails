@@ -320,6 +320,7 @@
     });//∞
   }
 
+
   //  ███████╗██╗  ██╗██████╗  ██████╗ ██████╗ ████████╗███████╗
   //  ██╔════╝╚██╗██╔╝██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝██╔════╝
   //  █████╗   ╚███╔╝ ██████╔╝██║   ██║██████╔╝   ██║   ███████╗
@@ -333,6 +334,7 @@
    */
 
   parasails = {};
+
 
   /**
    * parasails.util
@@ -409,7 +411,7 @@
    *
    * Define a Vue component.
    *
-   * @param {String} componentName
+   * @param {String} componentName   [In camelCase]
    * @param {Dictionary} def
    *
    * @returns {Ref}  [new vue component for this page]
@@ -421,8 +423,28 @@
     _exposeBonusMethods(def, 'component');
 
     // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
-    _wrapMethodsAndVerifyNoArrowFunctions(def);
+    _wrapMethodsAndVerifyNoArrowFunctions(def, 'component');
 
+    // Wrap the `mounted` LC in order to decorate the top-level element with
+    // a sniffable marker that can be unambiguously styled via a global selector
+    // in the corresponding stylesheet for the component.
+    var customMountedLC;
+    if (def.mounted) {
+      customMountedLC = def.mounted;
+    }//ﬁ
+    def.mounted = function(){
+
+      // Attach `parasails-component="…"` DOM attribute to allow for painless
+      // selecting from an optional, corresponding per-component stylesheet.
+      this.$el.setAttribute('parasails-component', _.kebabCase(componentName));
+
+      // Then call the original, custom "beforeMount" function, if there was one.
+      if (customMountedLC) {
+        customMountedLC.apply(this, []);
+      }
+    };//ƒ
+
+    // Finally, register as a global Vue component.
     Vue.component(componentName, def);
 
   };
