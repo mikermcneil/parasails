@@ -236,4 +236,4 @@ console.log(getHelloMessage('Joaquin'));
 
 ## License
 
-Copyright &copy; 2017 [Mike McNeil](https://github.com/mikermcneil)
+Copyright &copy; 2017-present [Mike McNeil](https://github.com/mikermcneil)
