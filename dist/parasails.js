@@ -2,7 +2,7 @@
  * parasails.js
  * (lightweight structures for apps with more than one page)
  *
- * v0.5.4-0
+ * v0.6.0-0
  *
  * Copyright 2017-present, Mike McNeil (@mikermcneil)
  * MIT License
@@ -17,6 +17,7 @@
   var _;
   var VueRouter;
   var $;
+  var bowser;
 
   //˙°˚°·.
   //‡CJS  ˚°˚°·˛
@@ -29,8 +30,9 @@
     // optional deps:
     try { VueRouter = _require('vue-router'); } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
     try { $ = _require('jquery'); } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
+    try { bowser = _require('bowser'); } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
     // export:
-    _module.exports = factory(Vue, _, VueRouter, $);
+    _module.exports = factory(Vue, _, VueRouter, $, bowser);
   }
   //˙°˚°·
   //‡AMD ˚¸
@@ -49,13 +51,14 @@
       // optional deps:
       VueRouter = global.VueRouter || undefined;
       $ = global.$ || global.jQuery || undefined;
+      bowser = global.bowser || undefined;
 
       // So... there's not really a huge point to supporting AMD here--
       // except that if you're using it in your project, it makes this
       // module fit nicely with the others you're using.  And if you
       // really hate globals, I guess there's that.
       // ¯\_(ツ)_/¯
-      return factory(Vue, _, VueRouter, $);
+      return factory(Vue, _, VueRouter, $, bowser);
     });//ƒ
   }
   //˙°˚˙°·
@@ -69,11 +72,12 @@
     // optional deps:
     VueRouter = global.VueRouter || undefined;
     $ = global.$ || global.jQuery || undefined;
+    bowser = global.bowser || undefined;
     // export:
     if (global.parasails) { throw new Error('Conflicting global (`parasails`) already exists!'); }
-    global.parasails = factory(Vue, _, VueRouter, $);
+    global.parasails = factory(Vue, _, VueRouter, $, bowser);
   }
-})(this, function (Vue, _, VueRouter, $){
+})(this, function (Vue, _, VueRouter, $, bowser){
 
 
   //  ██████╗ ██████╗ ██╗██╗   ██╗ █████╗ ████████╗███████╗
@@ -541,7 +545,7 @@
     if (!def.virtualPages && def.html5HistoryMode !== undefined) { throw new Error('Cannot specify `html5HistoryMode` without also specifying `virtualPages`!'); }
     if (!def.virtualPages && def.beforeEach !== undefined) { throw new Error('Cannot specify `beforeEach` without also specifying `virtualPages`!'); }
     if ((def.beforeNavigate || def.afterNavigate) && def.virtualPages !== true) { throw new Error('Cannot specify `beforeNavigate` or `afterNavigate` unless you set `virtualPages: true`!'); }
-    if (def.virtualPages) {
+    if (def.virtualPages !== undefined) {
       if (!VueRouter) { throw new Error('Cannot use `virtualPages`, because it depends on the Vue Router.  But `VueRouter` does not exist on the page yet.  (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the VueRouter plugin is getting brought in before `parasails`.)'); }
 
       // Now we'll replace `virtualPages` in our def with the thing that VueRouter actually expects:
@@ -664,7 +668,7 @@
                   _exposeBonusMethods(vueComponentDef, 'virtual page');
 
                   // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
-                  _wrapMethodsAndVerifyNoArrowFunctions(vueComponentDef);
+                  _wrapMethodsAndVerifyNoArrowFunctions(vueComponentDef, 'virtual page');
 
                   return vueComponentDef;
                 })()
@@ -752,6 +756,7 @@
   };//ƒ
 
 
+
   /**
    * parasails.util.isMobile()
    *
@@ -762,9 +767,10 @@
    * @returns {Boolean}
    */
   parasails.util.isMobile = function(){
+
     // If `bowser` is not available, throw an error.
     if(!bowser) {
-      throw new Error('Cannot detect browser, because `bowser` global does not exist on the page yet. '+
+      throw new Error('Cannot detect mobile-ness, because `bowser` global does not exist on the page yet. '+
         '(If you\'re using Sails, please check dependency loading order in pipeline.js and make sure '+
         'the Bowser library is getting brought in before `parasails`. If you have not included Bowser '+
         'in your project, you can find it at https://github.com/lancedikson/bowser/releases)');
@@ -773,6 +779,7 @@
     return !!bowser.mobile;
 
   };//ƒ
+
 
 
   /**
