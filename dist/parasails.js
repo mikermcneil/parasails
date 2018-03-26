@@ -2,7 +2,7 @@
  * parasails.js
  * (lightweight structures for apps with more than one page)
  *
- * v0.6.0-0
+ * v0.7.0
  *
  * Copyright 2017-present, Mike McNeil (@mikermcneil)
  * MIT License
@@ -779,7 +779,8 @@
     return !!bowser.mobile;
 
   };//ƒ
-
+  // An extra alias, for convenience:
+  parasails.isMobile = parasails.util.isMobile;
 
 
   /**
@@ -814,9 +815,6 @@
     return!0}})()(value);
     /* eslint-enable */
   };//ƒ
-
-  // An extra alias, for compatibility and old time's sake:
-  parasails.isValidEmailAddress = parasails.util.isValidEmailAddress;
 
 
 
