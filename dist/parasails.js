@@ -141,6 +141,7 @@
     if (def.methods && def.methods.$find) { throw new Error('This '+currentModuleEntityNoun+' contains `methods` with a `$find` key, but you\'re not allowed to override that'); }
     if (def.methods && def.methods.$focus) { throw new Error('This '+currentModuleEntityNoun+' contains `methods` with a `$focus` key, but you\'re not allowed to override that'); }
     if (def.methods && def.methods.forceRender) { throw new Error('This '+currentModuleEntityNoun+' contains `methods` with a `forceRender` key, but you\'re not allowed to override that'); }
+    if (def.methods && def.methods.$forceRender) { throw new Error('This '+currentModuleEntityNoun+' contains `methods` with a `$forceRender` key, but that\'s too confusing to let stand (did you mean "forceRender"?  Besides, that method cannot be overridden anyway)'); }
     def.methods = def.methods || {};
 
     // Attach misc. methods:
@@ -150,15 +151,25 @@
       return promise;
     };//ƒ
 
+
     // Attach jQuery-powered methods:
     if ($) {
-      def.methods.$get = function (){ return $(this.$el); };
-      def.methods.$find = function (subSelector){ return $(this.$el).find(subSelector); };
+      def.methods.$get = function (){
+        var $els = $(this.$el);
+        if ($els.length !== 1) { throw new Error('Cannot use .$get() - something is wrong with this '+currentModuleEntityNoun+'\'s top-level DOM element.  (It probably has not mounted yet!)'); }
+        return $els;
+      };
+      def.methods.$find = function (subSelector){
+        if (!subSelector) { throw new Error('Cannot use .$find() because no sub-selector was provided.\nExample usage:\n    var $emailFields = this.$find(\'[name="emailAddress"]\');'); }
+        var $els = $(this.$el);
+        if ($els.length !== 1) { throw new Error('Cannot use .$find() - something is wrong with this '+currentModuleEntityNoun+'\'s top-level DOM element.  (It probably has not mounted yet!)'); }
+        return $els.find(subSelector);
+      };
       def.methods.$focus = function (subSelector){
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        // FUTURE: If the current Vue thing hasn't mounted yet, throw an error.
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        var $fieldToAutoFocus = $(this.$el).find(subSelector);
+        if (!subSelector) { throw new Error('Cannot use .$focus() because no sub-selector was provided.\nExample usage:\n    this.$focus(\'[name="emailAddress"]\');'); }
+        var $els = $(this.$el);
+        if ($els.length !== 1) { throw new Error('Cannot use .$focus() - something is wrong with this '+currentModuleEntityNoun+'\'s top-level DOM element.  (It probably has not mounted yet!)'); }
+        var $fieldToAutoFocus = $els.find(subSelector);
         if ($fieldToAutoFocus.length === 0) { throw new Error('Could not autofocus-- no such element exists within this '+currentModuleEntityNoun+'.'); }
         if ($fieldToAutoFocus.length > 1) { throw new Error('Could not autofocus `'+subSelector+'`-- too many elements matched!'); }
         $fieldToAutoFocus.focus();
