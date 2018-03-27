@@ -380,7 +380,6 @@
     if (!_.isFunction(def)) { throw new Error('2nd argument (utility function definition) should be a function'); }
 
     // Build callable utility
-    // > FUTURE: also support machine defs?
     var callableUtility = def;
     callableUtility.name = utilityName;
 
