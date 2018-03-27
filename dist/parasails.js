@@ -827,6 +827,19 @@
   };//ƒ
 
 
+  /**
+   * parasails.utils
+   *
+   * A permanent alias for `parasails.util`.
+   *
+   * (Everyone gets these mixed up.)
+   *
+   * @type {:Dictionary}
+   */
+
+  parasails.utils = parasails.util;
+
+
 
   return parasails;
 
