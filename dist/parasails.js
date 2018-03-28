@@ -2,12 +2,14 @@
  * parasails.js
  * (lightweight structures for apps with more than one page)
  *
- * v0.7.0
+ * v0.7.1
  *
- * Copyright 2017-present, Mike McNeil (@mikermcneil)
+ * Copyright 2014-present, Mike McNeil (@mikermcneil)
  * MIT License
- * https://www.npmjs.com/package/parasails
- * https://sailsjs.com/support
+ *
+ * - https://sailsjs.com/about
+ * - https://sailsjs.com/support
+ * - https://www.npmjs.com/package/parasails
  *
  * > Parasails is a tiny (but opinionated) and pipeline-agnostic wrapper
  * > around Vue.js and Lodash, with optional participation from jQuery, bowser,

@@ -7,8 +7,14 @@
  * > tied to the version of parasails it's bundled in.  (All future development
  * > of Cloud SDK will be as part of parasails.)
  *
- * Copyright (c) 2014-present, Mike McNeil and Sails Co. (https://sailsjs.com/about)
+ * Copyright (c) 2014-present, Mike McNeil
  * MIT License
+ *
+ * - https://twitter.com/mikermcneil
+ * - https://sailsjs.com/about
+ * - https://sailsjs.com/support
+ * - https://www.npmjs.com/package/parasails
+ *
  * ---------------------------------------------------------------------------------------------
  * ## Basic Usage
  *
