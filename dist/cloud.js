@@ -2,13 +2,12 @@
  * cloud.js
  * (high-level AJAX library)
  *
- * > This is now part of the parasails project.  Originally branched from the original
- * > Cloud SDK library at v1.0.1.  (All future development of Cloud SDK will be
- * > as part of parasails.)
+ * > This is now part of `parasails`.  It was branched from the old "Cloud SDK"
+ * > library at its v1.0.1 -- but from that point on, its versioning has been
+ * > tied to the version of parasails it's bundled in.  (All future development
+ * > of Cloud SDK will be as part of parasails.)
  *
- * Copyright (c) 2017-present, Mike McNeil
- * Copyright (c) 2015-2017, Mike McNeil, Scott Gress, Sails Co. (https://sailsjs.com/about)
- * Copyright (c) 2014, Mike McNeil, Balderdash Design Co. (http://balderdash.co)
+ * Copyright (c) 2014-present, Mike McNeil and Sails Co. (https://sailsjs.com/about)
  * MIT License
  * ---------------------------------------------------------------------------------------------
  * ## Basic Usage
@@ -757,7 +756,7 @@
                     filesByFieldName[fieldName] = value;
                     delete textParamsByFieldName[fieldName];
                   }
-                });
+                });//∞
               }//ﬁ
 
               // Don't allow file uploads for GET requests,
@@ -1639,10 +1638,11 @@
           }
         });//∞
 
-        // Then delete them from the `params` object
-        Object.keys(routeParameters).forEach(function (paramName){
-          delete requestInfo.params[paramName];
-        });
+        // Then create a shallow copy of `requestInfo.params` without the route path
+        // parameters in it, and reattach that as `requestInfo.params`.
+        // (This prevents accidentally smashing argins and causing unintended
+        // consequences in userland code.)
+        requestInfo.params = _.omit(requestInfo.params, _.keys(routeParameters));
 
         // Now stick the route parameters into the destination url
         requestInfo.url = requestInfo.url.replace(/(\:[^\/\:\.\?]+\??)/g, function ($all, $1){
@@ -1650,7 +1650,6 @@
           if (routeParameters[routeParamName] === undefined) { return ''; }
           return routeParameters[routeParamName];
         });
-
 
 
         // Prepend the API base URL to `requestInfo.url`.
