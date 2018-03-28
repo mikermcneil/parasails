@@ -155,21 +155,21 @@
     // Attach jQuery-powered methods:
     if ($) {
       def.methods.$get = function (){
-        var $els = $(this.$el);
-        if ($els.length !== 1) { throw new Error('Cannot use .$get() - something is wrong with this '+currentModuleEntityNoun+'\'s top-level DOM element.  (It probably has not mounted yet!)'); }
-        return $els;
+        var $rootEl = $(this.$el);
+        if ($rootEl.length !== 1) { throw new Error('Cannot use .$get() - something is wrong with this '+currentModuleEntityNoun+'\'s top-level DOM element.  (It probably has not mounted yet!)'); }
+        return $rootEl;
       };
       def.methods.$find = function (subSelector){
         if (!subSelector) { throw new Error('Cannot use .$find() because no sub-selector was provided.\nExample usage:\n    var $emailFields = this.$find(\'[name="emailAddress"]\');'); }
-        var $els = $(this.$el);
-        if ($els.length !== 1) { throw new Error('Cannot use .$find() - something is wrong with this '+currentModuleEntityNoun+'\'s top-level DOM element.  (It probably has not mounted yet!)'); }
-        return $els.find(subSelector);
+        var $rootEl = $(this.$el);
+        if ($rootEl.length !== 1) { throw new Error('Cannot use .$find() - something is wrong with this '+currentModuleEntityNoun+'\'s top-level DOM element.  (It probably has not mounted yet!)'); }
+        return $rootEl.find(subSelector);
       };
       def.methods.$focus = function (subSelector){
         if (!subSelector) { throw new Error('Cannot use .$focus() because no sub-selector was provided.\nExample usage:\n    this.$focus(\'[name="emailAddress"]\');'); }
-        var $els = $(this.$el);
-        if ($els.length !== 1) { throw new Error('Cannot use .$focus() - something is wrong with this '+currentModuleEntityNoun+'\'s top-level DOM element.  (It probably has not mounted yet!)'); }
-        var $fieldToAutoFocus = $els.find(subSelector);
+        var $rootEl = $(this.$el);
+        if ($rootEl.length !== 1) { throw new Error('Cannot use .$focus() - something is wrong with this '+currentModuleEntityNoun+'\'s top-level DOM element.  (It probably has not mounted yet!)'); }
+        var $fieldToAutoFocus = $rootEl.find(subSelector);
         if ($fieldToAutoFocus.length === 0) { throw new Error('Could not autofocus-- no such element exists within this '+currentModuleEntityNoun+'.'); }
         if ($fieldToAutoFocus.length > 1) { throw new Error('Could not autofocus `'+subSelector+'`-- too many elements matched!'); }
         $fieldToAutoFocus.focus();
@@ -452,7 +452,7 @@
       // selecting from an optional, corresponding per-component stylesheet.
       this.$el.setAttribute('parasails-component', _.kebabCase(componentName));
 
-      // Then call the original, custom "beforeMount" function, if there was one.
+      // Then call the original, custom "mounted" function, if there was one.
       if (customMountedLC) {
         customMountedLC.apply(this, []);
       }
@@ -526,10 +526,71 @@
     // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
     _wrapMethodsAndVerifyNoArrowFunctions(def, 'page script');
 
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // FUTURE: Sniff with bowser and, if appropriate, attach a special mobile-only
-    // class to the page element as well as the <body>
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // If bowser and jQuery are both around, sniff the user agent and determine
+    // some additional information about the user agent device accessing the DOM.
+    var snifferCssClasses = '';
+    var SNIFFER_CSS_CLASS_PREFIX = 'detected-';
+    if (bowser && $) {
+
+      if (bowser.tablet||bowser.mobile) {
+        snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'mobile';
+        // ^^Note: "detected-mobile" means ANY mobile OS/device (handset or tablet)
+        //  [?] https://github.com/lancedikson/bowser/tree/6bbdaf99f0b36cf3a7b8a14feb0aa60d86d7e0dd#device-flags
+        if (bowser.ios) {
+          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'ios';
+        } else if (bowser.android) {
+          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'android';
+        } else if (bowser.windowsphone) {
+          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'windowsphone';
+        }
+
+        if (bowser.tablet) {
+          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'tablet';
+        } else if (bowser.mobile) {
+          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'handset';
+        }
+      }
+      else {
+        // Otherwise we're not on a mobile OS/browser/device.
+        // But we can at least get a bit more intell on what's up:
+        if (bowser.mac) {
+          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'mac';
+        } else if (bowser.windows) {
+          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'windows';
+        } else if (bowser.linux) {
+          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'linux';
+        }
+      }
+    }//ﬁ
+
+    // If we have jQuery available, then as soon as the DOM is ready, and if
+    // appropriate based on browser device sniffing, attach special classes to
+    // the <body> element.
+    if ($ && snifferCssClasses) {
+      $(function(){
+        $('body').addClass(snifferCssClasses);
+      });//_∏_
+    }//ﬁ
+
+    // Wrap the `mounted` LC:
+    var customMountedLC;
+    if (def.mounted) {
+      customMountedLC = def.mounted;
+    }//ﬁ
+    def.mounted = function(){
+
+      // Similar to above, attach special classes to the page script's top-level
+      // DOM element, now that it has been mounted (again, only if appropriate
+      // based on browser device sniffing, and only if jQuery is available.)
+      if ($ && snifferCssClasses) {
+        this.$get().addClass(snifferCssClasses);
+      }//ﬁ
+
+      // Then call the original, custom "mounted" function, if there was one.
+      if (customMountedLC) {
+        customMountedLC.apply(this, []);
+      }
+    };//ƒ
 
     // Automatically attach `pageName` to `data`, for convenience.
     if (def.data && def.data.pageName) { throw new Error('Page script definition contains `data` with a `pageName` key, but you\'re not allowed to override that'); }
@@ -692,9 +753,7 @@
       } else {
         throw new Error('Cannot use `virtualPages` because the specified value doesn\'t match any recognized meaning.  Please specify either `true` (for the default handling) or a dictionary of client-side routing rules.');
       }
-
-
-    }//ﬁ
+    }//ﬁ  </ def has `virtualPages` >
 
     // Construct Vue instance for this page script.
     var vm = new Vue(def);
@@ -708,9 +767,10 @@
   /**
    * parasails.util.isMobile()
    *
-   * Detect whether this being accessed from a mobile browser.
+   * Detect whether this is being accessed from a mobile browser/OS, which might
+   * be a handset device (iPhone, etc.) OR a tablet device (iPad, etc.)
    *
-   * > This just checks `bowser.mobile`, if available, for convenience.
+   * > This relies on `bowser.mobile||bowser.tablet`.
    *
    * @returns {Boolean}
    */
@@ -724,7 +784,7 @@
         'in your project, you can find it at https://github.com/lancedikson/bowser/releases)');
     }
 
-    return !!bowser.mobile;
+    return (!!bowser.mobile) || (!!bowser.tablet);
 
   };//ƒ
   // An extra alias, for convenience:
