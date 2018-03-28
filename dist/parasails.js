@@ -10,7 +10,8 @@
  * https://sailsjs.com/support
  *
  * > Parasails is a tiny (but opinionated) and pipeline-agnostic wrapper
- * > around Vue.js, jQuery, and Lodash.
+ * > around Vue.js and Lodash, with optional participation from jQuery, bowser,
+ * > and VueRouter.
  */
 (function(global, factory){
   var Vue;
