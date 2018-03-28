@@ -528,37 +528,37 @@
 
     // If bowser and jQuery are both around, sniff the user agent and determine
     // some additional information about the user agent device accessing the DOM.
-    var snifferCssClasses = '';
+    var bowserSniffClasses = '';
     var SNIFFER_CSS_CLASS_PREFIX = 'detected-';
     if (bowser && $) {
 
       if (bowser.tablet||bowser.mobile) {
-        snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'mobile';
+        bowserSniffClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'mobile';
         // ^^Note: "detected-mobile" means ANY mobile OS/device (handset or tablet)
         //  [?] https://github.com/lancedikson/bowser/tree/6bbdaf99f0b36cf3a7b8a14feb0aa60d86d7e0dd#device-flags
         if (bowser.ios) {
-          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'ios';
+          bowserSniffClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'ios';
         } else if (bowser.android) {
-          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'android';
+          bowserSniffClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'android';
         } else if (bowser.windowsphone) {
-          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'windowsphone';
+          bowserSniffClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'windowsphone';
         }
 
         if (bowser.tablet) {
-          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'tablet';
+          bowserSniffClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'tablet';
         } else if (bowser.mobile) {
-          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'handset';
+          bowserSniffClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'handset';
         }
       }
       else {
         // Otherwise we're not on a mobile OS/browser/device.
         // But we can at least get a bit more intell on what's up:
         if (bowser.mac) {
-          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'mac';
+          bowserSniffClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'mac';
         } else if (bowser.windows) {
-          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'windows';
+          bowserSniffClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'windows';
         } else if (bowser.linux) {
-          snifferCssClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'linux';
+          bowserSniffClasses += ' '+SNIFFER_CSS_CLASS_PREFIX+'linux';
         }
       }
     }//ﬁ
@@ -566,9 +566,9 @@
     // If we have jQuery available, then as soon as the DOM is ready, and if
     // appropriate based on browser device sniffing, attach special classes to
     // the <body> element.
-    if ($ && snifferCssClasses) {
+    if ($ && bowserSniffClasses) {
       $(function(){
-        $('body').addClass(snifferCssClasses);
+        $('body').addClass(bowserSniffClasses);
       });//_∏_
     }//ﬁ
 
@@ -582,8 +582,8 @@
       // Similar to above, attach special classes to the page script's top-level
       // DOM element, now that it has been mounted (again, only if appropriate
       // based on browser device sniffing, and only if jQuery is available.)
-      if ($ && snifferCssClasses) {
-        this.$get().addClass(snifferCssClasses);
+      if ($ && bowserSniffClasses) {
+        this.$get().addClass(bowserSniffClasses);
       }//ﬁ
 
       // Then call the original, custom "mounted" function, if there was one.
