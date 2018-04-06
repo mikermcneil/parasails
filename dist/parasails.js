@@ -663,8 +663,8 @@
           }
         };//ƒ
 
-        if (def.methods._navigate) {
-          throw new Error('Could not use `virtualPages: true`, because a conflicting `_navigate` method is defined.  Please remove it, or do something else.');
+        if (def.methods._handleVirtualNavigation) {
+          throw new Error('Could not use `virtualPages: true`, because a conflicting `_handleVirtualNavigation` method is defined.  Please remove it, or do something else.');
         }
 
         // Set up local variables to refer to things in `def`, since it will be changing below.
@@ -683,12 +683,12 @@
         // parasails features beyond the expected usage.
 
         def.methods = _.extend(def.methods||{}, {
-          _navigate: function(virtualPageSlug){
+          _handleVirtualNavigation: function(virtualPageSlug){
 
             if (beforeNavigate) {
               var resultFromBeforeNavigate = beforeNavigate.apply(this, [ virtualPageSlug ]);
               if (resultFromBeforeNavigate === false) {
-                return;
+                return false;
               }//•
             }
 
@@ -719,7 +719,7 @@
                       var matches = path.match(pathMatchingRegExp);
                       if (!matches) { throw new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`'); }
                       // console.log('this.$parent', this.$parent);
-                      this.$parent._navigate(matches[1]||'');
+                      this.$parent._handleVirtualNavigation(matches[1]||'');
                       // this.$emit('navigate', {
                       //   rawPath: path,
                       //   virtualPageSlug: matches[1]||''
@@ -731,7 +731,7 @@
                       var path = this.$route.path;
                       var matches = path.match(pathMatchingRegExp);
                       if (!matches) { throw new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`'); }
-                      this.$parent._navigate(matches[1]||'');
+                      this.$parent._handleVirtualNavigation(matches[1]||'');
                       // this.$emit('navigate', {
                       //   rawPath: path,
                       //   virtualPageSlug: matches[1]||''
