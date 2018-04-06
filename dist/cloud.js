@@ -1795,7 +1795,7 @@
           } else if (handleSocketMsg['*']) {
             handlerToRun = handleSocketMsg['*'];
           } else {
-            throw new Error('Unhandled "'+socketEventName+'" cloud event:  Received an incoming WebSocket message with an unrecognized "verb" property: "'+msg.verb+'".  If this was deliberate, register another key in the call to `Cloud.on(\''+socketEventName+'\', {…, '+msg.verb+': (msg)=>{…} })` to recognize this new sub-category of cloud event and handle it accordingly.  Otherwise, if you\'d like to silently ignore messages with other "verb"s, pass a function in to Cloud.on(), instead of a dictionary.');
+            throw new Error('Unhandled "'+socketEventName+'" cloud event:  Received an incoming WebSocket message with an unrecognized "verb" property: "'+msg.verb+'".  If this was deliberate, register another key in the call to `Cloud.on(\''+socketEventName+'\', {…, '+msg.verb+': (msg)=>{…} })` to recognize this new sub-category of cloud event and handle it accordingly.  Otherwise, if you\'d like to silently ignore messages with other "verb"s (or no "verb" at all), then pass a function in to Cloud.on(), instead of a dictionary -- or register a "*" key as a catchall, and make its function a no-op.');
           }
 
           try {
