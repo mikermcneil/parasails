@@ -606,16 +606,7 @@
     def.methods = def.methods || {};
     if (VueRouter) {
       def.methods.goto = function (rootRelativeUrlOrOpts){
-        try {
-          return this.$router.push(rootRelativeUrlOrOpts);
-        } catch (err) {
-          if (_.isObject(err) && err.code === 'E_DID_NOT_MATCH_REGEXP') {
-            console.log('!!!! IT WORKED!');
-            throw err;
-          } else {
-            throw err;
-          }
-        }
+        return this.$router.push(rootRelativeUrlOrOpts);
       };
     }
     else {
