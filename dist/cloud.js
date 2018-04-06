@@ -1773,20 +1773,22 @@
      * any time one of them is received.
      *
      * > This is almost identical to `io.socket.on()`, except that:
-     * > • (A) it prevents listening to the same event name more than once.
-     * >       (This restriction only exists for `Cloud.listen()` calls though--
+     * > • (A) listening to the same event name more than once will NOT BIND
+     * >       TWO DIFFERENT EVENTS!  Instead, the second listener will just
+     * >       replace the first.  In other words, this method is idempotent.
+     * >       (This property only exists for `Cloud.listen()` calls though--
      * >       it's not aware of other listeners you might have bound in other
      * >       ways.)
-     * > • (B) it also supports passing in a dictionary in lieu of a function
-     * >       for its second argument.  If provided, this dictionary will be
-     * >       used as a mini-router based around the conventional "verb"
-     * >       property in all incoming socket messages.  In addition, if the
+     * > • (B) Cloud.listen() also supports passing in a dictionary in lieu of
+     * >       a function for its second argument.  If provided, this dictionary
+     * >       will be used as a mini-router based around the conventional "verb"
+     * >       property in relevant incoming socket messages.  In addition, if the
      * >       special, reserved "error" key is provided with a catchall function,
-     * >       it will be used to handle any socket events that don't match other
-     * >       keys, or that are missing a "verb property" (i.e. to allow for
-     * >       custom error handling-- otherwise, a default error is thrown.)
-     * >       If an "error" key was provided, and a socket message arrives with
-     * >       `verb: 'error'`, then it is still routed as expected.
+     * >       it will be used to handle any messages w/ a verb that doesn't match
+     * >       any of the other keys, or that are missing a "verb" altogether
+     * >       (i.e. to allow for custom error handling-- otherwise, a default error
+     * >       is thrown.)  If an "error" key was provided, and a socket message
+     * >       arrives with `verb: 'error'`, then it is routed as expected.
      *
      * @param  {String} socketEventName
      * @param  {Function|Dictionary} handleSocketMsg
@@ -1798,7 +1800,8 @@
       if (!io || !io.socket) { throw new Error('Could not bind a cloud event listener with `Cloud.listen()`: WebSocket support is not currently available (`io.socket` is not available).  Make sure `sails.io.js` is being injected in a <script> tag!'); }
 
       if (_.contains(_boundSocketEventNames, socketEventName)) {
-        throw new Error('Refusing to bind another cloud event listener for "'+socketEventName+'".  `Cloud.listen()` should only be used in situations where exactly one listener function is bound per variety of incoming WebSocket message (socket event name).  If this error is unexpected, then consider: is there any chance the code that calls `Cloud.listen()` is being inadvertently run more than once?');
+        // TODO...?  Well, wait...
+        // throw new Error('Refusing to bind another cloud event listener for "'+socketEventName+'".  `Cloud.listen()` should only be used in situations where exactly one listener function is bound per variety of incoming WebSocket message (socket event name).  If this error is unexpected, then consider: is there any chance the code that calls `Cloud.listen()` is being inadvertently run more than once?');
       }
       _boundSocketEventNames.push(socketEventName);
 
