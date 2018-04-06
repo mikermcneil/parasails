@@ -1756,7 +1756,9 @@
     // Now attach the configured endpoint methods
     _.extend(Cloud, methods);
 
-    // And attach `.on()` and `.off()`:
+    // And finally, `.on()` and `.off()`:
+    // (keeping track of bindings privately)
+    var _boundSocketEventNames = [];
 
     /**
      * Cloud.on()
@@ -1764,40 +1766,62 @@
      * Listen for a particular kind of socket events, and trigger a function
      * any time one of them is received.
      *
-     * > This is almost identical to `io.socket.on()`, except that it prevents
-     * > listening to the same event name more than once.  (This restriction
-     * > only exists for `Cloud.on()` calls though-- it's not aware of other
-     * > listeners you might have bound in other ways.)
+     * > This is almost identical to `io.socket.on()`, except that:
+     * > • (A) it prevents listening to the same event name more than once.
+     * >       (This restriction only exists for `Cloud.on()` calls though--
+     * >       it's not aware of other listeners you might have bound in other
+     * >       ways.)
+     * > • (B) it also supports passing in a dictionary in lieu of a function
+     * >       for its second argument.  If provided, this dictionary will be
+     * >       used as a mini-router based around the conventional "verb"
+     * >       property in all incoming socket messages.  The special, reserved
+     * >       "*" key, if provided, will be used to handle unmatched
+     * >       socket events (e.g. to allow for custom error handling.)
      *
-     * @param  {[type]} socketEventName [description]
-     * @param  {[type]} handleSocketMsg [description]
-     * @return {[type]}                 [description]
+     * @param  {String} socketEventName
+     * @param  {Function|Dictionary} handleSocketMsg
      */
     Cloud.on = function(socketEventName, handleSocketMsg) {
-      if (!socketEventName) { throw new Error('Invalid usage for `Cloud.on()`: Must pass in a first argument (name of the socket event to listen for).'); }
+      if (!socketEventName || !_.isString(socketEventName)) { throw new Error('Invalid usage for `Cloud.on()`: Must pass in a valid first argument (a string; the name of the socket event to listen for).'); }
       if (!handleSocketMsg) { throw new Error('Invalid usage for `Cloud.on()`: Must pass in a second argument (the function to run every time this socket event is received).'); }
 
       if (!io || !io.socket) { throw new Error('Could not bind a WebSocket event listener with `Cloud.on()`: Socket support is not currently available (`io.socket` is not available).  Make sure `sails.io.js` is being injected in a <script> tag!'); }
-      // TODO: ensure only one binding per event name
 
-      io.socket.on(socketEventName, handleSocketMsg);//œ
-      return handleSocketMsg;
+      if (_.contains(_boundSocketEventNames, socketEventName)) {
+        throw new Error('Refusing to bind another WebSocket event listener for "'+socketEventName+'".  `Cloud.on()` should only be used in situations where exactly one listener function is bound per socket event name.  If this error is unexpected, then consider: is there any chance the code that calls `Cloud.on()` is being inadvertently run more than once?');
+      }
+      _boundSocketEventNames.push(socketEventName);
+
+      if (_.isObject(handleSocketMsg) && !_.isArray(handleSocketMsg) && !_.isFunction(handleSocketMsg)) {
+        io.socket.on(socketEventName, function(msg) {
+
+        });//œ
+      } else if (_.isFunction(handleSocketMsg)) {
+        io.socket.on(socketEventName, handleSocketMsg);//œ
+      } else {
+        throw new Error('Invalid usage for `Cloud.on()`: Second argument must either be a function (the function to run every time this socket event is received) or a dictionary of functions that will be negotiated and routed to based on the incoming message\'s conventional "verb" property (e.g. `{ "order": (msg)=>{…}, "organization": (msg)=>{…}, "*": (msg)=>{…} }`.');
+      }
     };//</ .on() >
 
     /**
      * Cloud.off()
      *
-     * Stop listening to a particular kind of socket events,
-     * @param  {[type]} socketEventName   [description]
-     * @param  {[type]} particularHandler [description]
-     * @return {[type]}                   [description]
+     * Stop listening to ANY AND ALL SOCKET EVENTS of a particular kind.
+     *
+     * > This is almost identical to `io.socket.off()`, except that it ALWAYS
+     * > applies to all future socket messages that arrive under the given event
+     * > name.
+     *
+     * @param  {String} socketEventName
      */
-    Cloud.off = function(socketEventName, particularHandler) {
-      if (!socketEventName) { throw new Error('Invalid usage for `Cloud.off()`: Must pass in a first argument (name of the socket event to stop listening for).'); }
+    Cloud.off = function(socketEventName) {
+      if (!socketEventName || !_.isString(socketEventName)) { throw new Error('Invalid usage for `Cloud.off()`: Must pass in a first argument (a string; the name of the socket event to stop listening for).'); }
 
       if (!io || !io.socket) { throw new Error('Could not unbind a WebSocket event listener with `Cloud.off()`: Socket support is not currently available (`io.socket` is not available).  Make sure `sails.io.js` is being injected in a <script> tag!'); }
 
-      io.socket.off(socketEventName, particularHandler);
+      _boundSocketEventNames = _.without(_boundSocketEventNames, socketEventName);
+
+      io.socket.off(socketEventName);
     };//</ .off() >
 
   };//ƒ   </ .setup() >
