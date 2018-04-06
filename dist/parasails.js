@@ -221,6 +221,29 @@
         'data',
         'methods',
 
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // TODO: Add `this.listen()` and `this.ignore()` -- see:
+        // https://github.com/mikermcneil/parasails/commit/5b948a1a8a0945b19ccea6da3e7354255d3dc0b6
+        //
+        // Or better yet, just use a declarative approach instead and let
+        // binding/unbinding happen behind the scenes.  e.g.:
+        // ```
+        // cloudEvents: {
+        //   pet: (msg)=>{…},
+        //   user: (msg)=>{…},
+        //   organization: {
+        //     destroyed: (msg)=>{…},
+        //     updated: (msg)=>{…},
+        //     bankWireReceived: (msg)=>{…},
+        //     error: (msg)=>{…}
+        //   },
+        //   circus: {
+        //     admissionPaymentReceived: (msg)=>{…}
+        //   }
+        // }
+        // ```
+        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
         // Extra component stuff:
         'props',
         'template',
