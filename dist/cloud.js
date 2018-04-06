@@ -1776,6 +1776,8 @@
      *
      * @param  {String} socketEventName
      * @param  {Function|Dictionary} handleSocketMsg
+     *
+     * @returns {Function}  (the actual handler function that was bound, for potential use later with `Cloud.off()`)
      */
     Cloud.on = function(socketEventName, handleSocketMsg) {
       if (!socketEventName || !_.isString(socketEventName)) { throw new Error('Invalid usage for `Cloud.on()`: Must pass in a valid first argument (a string; the name of the socket event to listen for -- i.e. the variety of incoming WebSocket messages to receive and handle).'); }
@@ -1783,9 +1785,10 @@
 
       if (!io || !io.socket) { throw new Error('Could not bind a cloud event listener with `Cloud.on()`: WebSocket support is not currently available (`io.socket` is not available).  Make sure `sails.io.js` is being injected in a <script> tag!'); }
 
+      var actualHandler;
       if (_.isObject(handleSocketMsg) && !_.isArray(handleSocketMsg) && !_.isFunction(handleSocketMsg)) {
         // Further negotiate based on "verb", if configured to do so.
-        io.socket.on(socketEventName, function(msg) {
+        actualHandler = function(msg) {
           var handlerToRun;
           if (_.contains(_.keys(handleSocketMsg), msg.verb)) {
             handlerToRun = handleSocketMsg[msg.verb];
@@ -1802,32 +1805,40 @@
             err.message = 'An uncaught error was thrown while handling an incoming WebSocket message (a "'+socketEventName+'" cloud event).  '+ err.message;
             throw err;
           }
-        });//œ
+        };//ƒ
+        io.socket.on(socketEventName, actualHandler);//œ
       } else if (_.isFunction(handleSocketMsg)) {
         // Otherwise, just run the handler function.
-        io.socket.on(socketEventName, handleSocketMsg);//œ
+        actualHandler = handleSocketMsg;
       } else {
         throw new Error('Invalid usage for `Cloud.on()`: Second argument must either be a function (the function to run every time this socket event is received) or a dictionary of functions that will be negotiated and routed to based on the incoming message\'s conventional "verb" property (e.g. `{ "bankWireReceived": (msg)=>{…}, "destroyed": (msg)=>{…}, "error": (msg)=>{…} }`.');
       }
+
+      io.socket.on(socketEventName, actualHandler);//œ
+
+      return actualHandler;
     };//</ .on() >
 
     /**
      * Cloud.off()
      *
-     * Stop listening to ANY AND ALL WEBSOCKET MESSAGES of a particular kind.
+     * Stop listening to ANY AND ALL WEBSOCKET MESSAGES of a particular kind; or
+     * to WebSocket messages from a specific handler function.
      *
      * > This is almost identical to `io.socket.off()`, except that it ALWAYS
      * > applies to all future socket messages that arrive under the given event
      * > name.
      *
      * @param  {String} socketEventName
+     * @param  {Function?} specificHandler
      */
-    Cloud.off = function(socketEventName) {
+    Cloud.off = function(socketEventName, specificHandler) {
       if (!socketEventName || !_.isString(socketEventName)) { throw new Error('Invalid usage for `Cloud.off()`: Must pass in a first argument (a string; the name of the socket event to stop listening for -- i.e. the variety of incoming WebSocket messages to reject and ignore).'); }
+      if (specificHandler !== undefined && !_.isFunction(specificHandler)) { throw new Error('Invalid usage for `Cloud.off()`: If a second argument is provided, it should be a function  (the specific handler you want to stop running every time a matching WebSocket message is received).'); }
 
       if (!io || !io.socket) { throw new Error('Could not stop listening to cloud events with `Cloud.off()`: WebSocket support is not currently available (`io.socket` is not available).  Make sure `sails.io.js` is being injected in a <script> tag!'); }
 
-      io.socket.off(socketEventName);
+      io.socket.off(socketEventName, specificHandler);
     };//</ .off() >
 
   };//ƒ   </ .setup() >

@@ -224,6 +224,7 @@
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // TODO: Add `this.listen()` and `this.ignore()` -- see:
         // https://github.com/mikermcneil/parasails/commit/5b948a1a8a0945b19ccea6da3e7354255d3dc0b6
+        // (and also 83c439dc1f3a0375e67066fffe9151581cbab639)
         //
         // Or better yet, just use a declarative approach instead and let
         // binding/unbinding happen behind the scenes.  e.g.:
