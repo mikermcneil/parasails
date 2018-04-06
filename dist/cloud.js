@@ -1767,12 +1767,12 @@
      * >       a function for its second argument.  If provided, this dictionary
      * >       will be used as a mini-router based around the conventional "verb"
      * >       property in relevant incoming socket messages.  In addition, if the
-     * >       special, reserved "error" key is provided with a catchall function,
+     * >       special, reserved "*" key is registered as a catchall function,
      * >       it will be used to handle any messages w/ a verb that doesn't match
-     * >       any of the other keys, or that are missing a "verb" altogether
-     * >       (i.e. to allow for custom error handling-- otherwise, a default error
-     * >       is thrown.)  If an "error" key was provided, and a socket message
-     * >       arrives with `verb: 'error'`, then it is routed as expected.
+     * >       any of the other verbs, or that are missing a "verb" altogether
+     * >       (i.e. to allow for custom error handling-- otherwise, a built-in error
+     * >       is thrown.)  If a socket message arrives with `verb: '*'`, while
+     * >       kinda weird, it is still routed as expected.
      *
      * @param  {String} socketEventName
      * @param  {Function|Dictionary} handleSocketMsg
@@ -1792,10 +1792,10 @@
           var handlerToRun;
           if (_.contains(_.keys(handleSocketMsg), msg.verb)) {
             handlerToRun = handleSocketMsg[msg.verb];
-          } else if (handleSocketMsg.error) {
-            handlerToRun = handleSocketMsg.error;
+          } else if (handleSocketMsg['*']) {
+            handlerToRun = handleSocketMsg['*'];
           } else {
-            throw new Error('Unhandled "'+socketEventName+'" cloud event:  Received an incoming WebSocket message with an unrecognized "verb" property: "'+msg.verb+'".  If this was deliberate, register another key in the call to `Cloud.on(\''+socketEventName+'\', {…, '+msg.verb+': (msg)=>{…} })` to recognize this new sub-category of cloud event and handle it accordingly.  Otherwise, if you\'d like to get rid of this error message, customize the catchall behavior by registering an "error" key.');
+            throw new Error('Unhandled "'+socketEventName+'" cloud event:  Received an incoming WebSocket message with an unrecognized "verb" property: "'+msg.verb+'".  If this was deliberate, register another key in the call to `Cloud.on(\''+socketEventName+'\', {…, '+msg.verb+': (msg)=>{…} })` to recognize this new sub-category of cloud event and handle it accordingly.  Otherwise, if you\'d like to silently ignore messages with other "verb"s, pass a function in to Cloud.on(), instead of a dictionary.');
           }
 
           try {
@@ -1811,7 +1811,7 @@
         // Otherwise, just run the handler function.
         actualHandler = handleSocketMsg;
       } else {
-        throw new Error('Invalid usage for `Cloud.on()`: Second argument must either be a function (the function to run every time this socket event is received) or a dictionary of functions that will be negotiated and routed to based on the incoming message\'s conventional "verb" property (e.g. `{ "bankWireReceived": (msg)=>{…}, "destroyed": (msg)=>{…}, "error": (msg)=>{…} }`.');
+        throw new Error('Invalid usage for `Cloud.on()`: Second argument must either be a function (the function to run every time this socket event is received) or a dictionary of functions that will be negotiated and routed to based on the incoming message\'s conventional "verb" property (e.g. `{ "bankWireReceived": (msg)=>{…}, "destroyed": (msg)=>{…}, "*": (msg)=>{…} }`.');
       }
 
       io.socket.on(socketEventName, actualHandler);//œ
