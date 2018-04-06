@@ -686,8 +686,8 @@
           _navigate: function(virtualPageSlug){
 
             if (beforeNavigate) {
-              var doCancelNavigate = beforeNavigate.apply(this, [ virtualPageSlug ]);
-              if (doCancelNavigate === false) {
+              var resultFromBeforeNavigate = beforeNavigate.apply(this, [ virtualPageSlug ]);
+              if (resultFromBeforeNavigate === false) {
                 return;
               }//•
             }
