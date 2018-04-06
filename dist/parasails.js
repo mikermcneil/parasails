@@ -606,7 +606,16 @@
     def.methods = def.methods || {};
     if (VueRouter) {
       def.methods.goto = function (rootRelativeUrlOrOpts){
-        return this.$router.push(rootRelativeUrlOrOpts);
+        try {
+          return this.$router.push(rootRelativeUrlOrOpts);
+        } catch (err) {
+          if (_.isObject(err) && err.code === 'E_DID_NOT_MATCH_REGEXP') {
+            console.log('!!!! IT WORKED!');
+            throw err;
+          } else {
+            throw err;
+          }
+        }
       };
     }
     else {
@@ -717,7 +726,12 @@
                       // this.$emit('navigate', to.path); <<old way
                       var path = to.path;
                       var matches = path.match(pathMatchingRegExp);
-                      if (!matches) { throw new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`'); }
+                      if (!matches) {
+                        var err =new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`');
+                        err.code = 'E_DID_NOT_MATCH_REGEXP';
+                        throw err;
+                      }//•
+
                       // console.log('this.$parent', this.$parent);
                       this.$parent._handleVirtualNavigation(matches[1]||'');
                       // this.$emit('navigate', {
@@ -730,7 +744,12 @@
                       // this.$emit('navigate', this.$route.path); <<old way
                       var path = this.$route.path;
                       var matches = path.match(pathMatchingRegExp);
-                      if (!matches) { throw new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`'); }
+                      if (!matches) {
+                        var err =new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`');
+                        err.code = 'E_DID_NOT_MATCH_REGEXP';
+                        throw err;
+                      }//•
+
                       this.$parent._handleVirtualNavigation(matches[1]||'');
                       // this.$emit('navigate', {
                       //   rawPath: path,
