@@ -299,6 +299,125 @@
   }
 
 
+  //   ██████╗ ██╗      ██████╗ ██████╗  █████╗ ██╗         ███████╗██╗   ██╗███████╗███╗   ██╗████████╗███████╗
+  //  ██╔════╝ ██║     ██╔═══██╗██╔══██╗██╔══██╗██║         ██╔════╝██║   ██║██╔════╝████╗  ██║╚══██╔══╝██╔════╝
+  //  ██║  ███╗██║     ██║   ██║██████╔╝███████║██║         █████╗  ██║   ██║█████╗  ██╔██╗ ██║   ██║   ███████╗
+  //  ██║   ██║██║     ██║   ██║██╔══██╗██╔══██║██║         ██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║   ╚════██║
+  //  ╚██████╔╝███████╗╚██████╔╝██████╔╝██║  ██║███████╗    ███████╗ ╚████╔╝ ███████╗██║ ╚████║   ██║   ███████║
+  //   ╚═════╝ ╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝    ╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝
+  //
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  // Capture uncaught errors (and trigger a fatal error if appropriate)
+  //
+  // A global error handler, "catcher of the uncaught", first of its name, and
+  // bane to bugs.  This (normally-invisible) gutter lurks at the bottom of the
+  // screen, but then springs to life if any uncaught errors are detected.
+  //
+  // > Out of the box, this behavior is deactivated any time Sails is running in
+  // > in the "production" environment (`sails.config.environment !== 'production')
+  // > (e.g. your local development machine, your staging server).  In order to do
+  // > this, it checks `SAILS_LOCALS._environment`, a special variable set by the
+  // > boilerplate "custom" hook (included in all Sails apps using the "Web App"
+  // > template).  Note that this behavior is also disabled if `window.SAILS_LOCALS`
+  // > is not set (e.g. any pages where "exposeLocalsToBrowser" is not in use).
+  // > Finally, this behavior is also disabled if jQuery is not available.
+  //
+  // ---------------------------------------------------------------------------------------
+  // In the off change your app is using a tool like Bugsnag/Sentry/Rollbars in
+  // environments OTHER THAN PRODUCTION, and you'd like to disable this behavior,
+  // the following section of code can simply be removed.
+  // ---------------------------------------------------------------------------------------
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  if ($ && typeof window !== 'undefined' && window.SAILS_LOCALS && window.SAILS_LOCALS._environment !== 'production') {
+
+    // Configure Vue to share its beforeMount errors (and others) with us.
+    // > https://vuejs.org/v2/api/#errorHandler
+    Vue.config.errorHandler = function (err, vm, info) {
+      if (err && err.message) {
+        err.message = 'In '+info+': '+err.message;
+      } else {
+        var _originalErr = err;
+        err = new Error(_originalErr);
+        err.raw = _originalErr;
+      }
+      throw err;
+    };
+
+    // Bind top-level error handler on the window.
+    //
+    // This NEVER prevents the error from continuing to be uncaught- it's just here
+    // to ensure that if any JS errors occur, we notice them immediately, even if we
+    // don't have Chrome dev tools open.
+    //
+    // For more info about `window.onerror`, see:
+    // https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
+    window.onerror = function onUncaughtException(message, scriptSrc, lineNo, charNo, err){
+
+      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      // FUTURE: Include this in parasails by default (if jQuery is available)
+      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+      if ($('#parasails-error-handler').length === 0) {
+        // Very first error:
+        $('<div id="parasails-error-handler">'+
+          '<div role="error-handler-content">'+
+            '<h1>Whoops</h1>'+
+            '<p>'+
+              '<span role="summary">An unexpected client-side error occurred.</span><br/>'+
+              'Please check your browser\'s JavaScript console for details.<br/>'+
+              '<small>This message will not be displayed in production.  '+
+              'If you\'re unsure, <a href="https://sailsjs.com/support">ask for help</a>.</small><br/>'+
+              '<small>'+(new Date())+'</small>'+
+            '</p>'+
+          '</div>'+
+        '</div>')
+        .css({
+          position: 'fixed',
+          bottom: '0',
+          height: '100%',
+          width: '100%',
+          display: 'table',
+          'background': 'radial-gradient(circle, rgba(0,0,0,0.98) 0%, rgba(35,8,8,0.87) 80%, rgba(20,5,5,0.85) 100%)',
+          // (Thanks cssgradient.io!)
+        })
+        .appendTo('body');
+
+        $('#parasails-error-handler [role="error-handler-content"]').css({
+          display: 'table-cell',
+          'vertical-align': 'middle',
+          'text-align': 'center'
+        });
+
+        $('#parasails-error-handler [role="error-handler-content"] *').css({
+          'font-family': '\'Consolas\', \'Courier\', \'courier\', serif',
+          color: 'white'
+        });
+
+        $('#parasails-error-handler [role="error-handler-content"] small').css({
+          color: '#cccccc'
+        });
+
+        $('#parasails-error-handler [role="error-handler-content"] a').css({
+          'text-decoration': 'underline',
+          color: '#cccccc'
+        });
+
+      } else {
+        // Subsequent errors:
+        $('#parasails-error-handler [role="summary"]')
+        .text('Multiple unexpected client-side errors occurred.');
+      }
+
+      // Returning `true` would suppress the actual uncaught error from
+      // showing up in the JavaScript console. But we don't want to play
+      // with fire for now.  Just getting access to this is enough.
+      // We allow the error to continue to be uncaught.
+      return false;
+    };//œ </ on uncaught error >
+
+  }//ﬁ
+
   //  ███████╗██╗  ██╗██████╗  ██████╗ ██████╗ ████████╗███████╗
   //  ██╔════╝╚██╗██╔╝██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝██╔════╝
   //  █████╗   ╚███╔╝ ██████╔╝██║   ██║██████╔╝   ██║   ███████╗
