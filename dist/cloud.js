@@ -37,139 +37,24 @@
  * ```
  * ---------------------------------------------------------------------------------------------
  */
-(function(global, factory){
-  var _;
-  var io;
-  var $;
-  var SAILS_LOCALS;
-  var location;
-  var File;
-  var FormData;
+(function(factory, exposeUMD){
+  exposeUMD(this, factory);
+})(function (_, io, $, SAILS_LOCALS, location, File, FormData){
 
-  // First, handle optional deps that are gleaned from the global state:
-  // > Note: Instead of throwing, we ignore invalid globals.
-  // > (Remember the bug w/ the File global that happened in Socket.io
-  // > back in ~2015!)
-  // =====================================================================
-  if (global.location !== undefined) {
-    if (global.location && typeof global.location === 'object' && (global.location.constructor.name === 'Location' || global.location.constructor.toString() === '[object Location]')) {
-      location = global.location;
-    }
-  }//ﬁ
-  if (global.File !== undefined) {
-    if (global.File && typeof global.File === 'function' && global.File.name === 'File') {
-      File = global.File;
-    }
-  }//ﬁ
-  if (global.FormData !== undefined) {
-    if (global.FormData && typeof global.FormData === 'function' && global.FormData.name === 'FormData') {
-      FormData = global.FormData;
-    }
-  }//ﬁ
-
-  // Then, load the rest of the deps:
-  // =====================================================================
-
-  //˙°˚°·.
-  //‡CJS  ˚°˚°·˛
-  if (typeof exports === 'object' && typeof module !== 'undefined') {
-    var _require = require;// eslint-disable-line no-undef
-    var _module = module;// eslint-disable-line no-undef
-    // required deps:
-    if (typeof _ === 'undefined') {
-      try {
-        _ = _require('@sailshq/lodash');
-      } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
-    }//ﬁ
-    if (typeof _ === 'undefined') {
-      try {
-        _ = _require('lodash');
-      } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
-    }//ﬁ
-
-    // optional deps:
-    try { $ = _require('jquery'); } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
-    try {
-
-      io = _require('socket.io-client');
-      var sailsIO = _require('sails.io.js');
-
-      // Instantiate the library (and start auto-connecting)
-      io = sailsIO(io);
-
-      // Disable logging
-      io.sails.environment = 'production';
-
-      // Note that, if there is no location global, then after one tick,
-      // if `io.sails.url` has still not been set, weird errors will emerge.
-      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      // FUTURE: figure out a way to provide a better err msg about this--
-      // i.e. specifically the case where `.setup()` isn't called within one tick.
-      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    } catch (err) {
-      if (err.code === 'MODULE_NOT_FOUND') {
-        // that's ok-- just make sure and unwind any vars that might have
-        // gotten partially set up, since we attempted to require more than
-        // one thing above (and e.g. the second `require()` might have failed)
-        io = undefined;
-      } else {
-        throw err;
-      }
-    }
-
-    SAILS_LOCALS = undefined;
-
-    // export:
-    _module.exports = factory(_, io, $, SAILS_LOCALS, location, File, FormData);
-  }
-  //˙°˚°·
-  //‡AMD ˚¸
-  else if(typeof define === 'function' && define.amd) {// eslint-disable-line no-undef
-    throw new Error('Global `define()` function detected, but built-in AMD support in `cloud.js` is not currently recommended.  To resolve this, modify `cloud.js`.');
-    // var _define = define;// eslint-disable-line no-undef
-    // _define(['_', 'sails.io.js', '$', 'SAILS_LOCALS', 'location', 'file'], factory);
-  }
-  //˙°˚˙°·
-  //‡NUDE ˚°·˛
-  else {
-    // required deps:
-    if (!global._) { throw new Error('`_` global does not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the Lodash library is getting brought in before `cloud`.)'); }
-    _ = global._;
-    // optional deps:
-    if (global.io !== undefined) {
-      if (typeof global.io !== 'function') {
-        throw new Error('Could not access `io.socket`: The `io` global is invalid at the moment:' + global.io + '\n(If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the sails.io.js library is getting brought in before `cloud`.)');
-      }
-      else if (typeof global.io.socket === 'undefined') {
-        throw new Error('Could not access `io.socket`: `io` does not have a `socket` property.  Make sure `sails.io.js` is being injected in a <script> tag!');
-      }
-      else {
-        io = global.io;
-      }
-    }//ﬁ
-    if (global.$ !== undefined) {
-      if (typeof global.$ !== 'function') {
-        throw new Error('The `$` global is not valid at the moment:' + global.$ + '\n(If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the jQuery library is getting brought in before `cloud`.)');
-      }
-      else {
-        $ = global.$;
-      }
-    }//ﬁ
-    if (global.SAILS_LOCALS !== undefined) {
-      if (!_.isObject(global.SAILS_LOCALS)) {
-        throw new Error('The `SAILS_LOCALS` global is not valid at the moment:' + global.SAILS_LOCALS + '\n(Please check and make sure you are using `<%- exposeLocalsToBrowser() %>` in your server-side view *before* the rest of your scripts.)');
-      }
-      else {
-        SAILS_LOCALS = global.SAILS_LOCALS;
-      }
-    }//ﬁ
-
-    // export:
-    if (global.Cloud) { throw new Error('Cannot expose global variable: Conflicting global (`cloud`) already exists!'); }
-    global.Cloud = factory(_, io, $, SAILS_LOCALS, location, File, FormData);
-  }
-})(this, function (_, io, $, SAILS_LOCALS, location, File, FormData){
-
+  //  ██████╗ ██████╗ ██╗██╗   ██╗ █████╗ ████████╗███████╗
+  //  ██╔══██╗██╔══██╗██║██║   ██║██╔══██╗╚══██╔══╝██╔════╝
+  //  ██████╔╝██████╔╝██║██║   ██║███████║   ██║   █████╗
+  //  ██╔═══╝ ██╔══██╗██║╚██╗ ██╔╝██╔══██║   ██║   ██╔══╝
+  //  ██║     ██║  ██║██║ ╚████╔╝ ██║  ██║   ██║   ███████╗
+  //  ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝  ╚═╝  ╚═╝   ╚═╝   ╚══════╝
+  //
+  //  ██╗   ██╗████████╗██╗██╗     ███████╗
+  //  ██║   ██║╚══██╔══╝██║██║     ██╔════╝
+  //  ██║   ██║   ██║   ██║██║     ███████╗
+  //  ██║   ██║   ██║   ██║██║     ╚════██║
+  //  ╚██████╔╝   ██║   ██║███████╗███████║
+  //   ╚═════╝    ╚═╝   ╚═╝╚══════╝╚══════╝
+  // Module utilities (private)
 
 
   /**
@@ -205,9 +90,13 @@
 
 
 
-
-
-
+  //  ███████╗██╗  ██╗██████╗  ██████╗ ██████╗ ████████╗███████╗
+  //  ██╔════╝╚██╗██╔╝██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝██╔════╝
+  //  █████╗   ╚███╔╝ ██████╔╝██║   ██║██████╔╝   ██║   ███████╗
+  //  ██╔══╝   ██╔██╗ ██╔═══╝ ██║   ██║██╔══██╗   ██║   ╚════██║
+  //  ███████╗██╔╝ ██╗██║     ╚██████╔╝██║  ██║   ██║   ███████║
+  //  ╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝
+  // Module exports:
 
   /**
    * Cloud (SDK)
@@ -1845,4 +1734,135 @@
 
   return Cloud;
 
-});
+}, function(global, factory) {
+  var _;
+  var io;
+  var $;
+  var SAILS_LOCALS;
+  var location;
+  var File;
+  var FormData;
+
+  // First, handle optional deps that are gleaned from the global state:
+  // > Note: Instead of throwing, we ignore invalid globals.
+  // > (Remember the bug w/ the File global that happened in Socket.io
+  // > back in ~2015!)
+  // =====================================================================
+  if (global.location !== undefined) {
+    if (global.location && typeof global.location === 'object' && (global.location.constructor.name === 'Location' || global.location.constructor.toString() === '[object Location]')) {
+      location = global.location;
+    }
+  }//ﬁ
+  if (global.File !== undefined) {
+    if (global.File && typeof global.File === 'function' && global.File.name === 'File') {
+      File = global.File;
+    }
+  }//ﬁ
+  if (global.FormData !== undefined) {
+    if (global.FormData && typeof global.FormData === 'function' && global.FormData.name === 'FormData') {
+      FormData = global.FormData;
+    }
+  }//ﬁ
+
+  // Then, load the rest of the deps:
+  // =====================================================================
+
+  //˙°˚°·.
+  //‡CJS  ˚°˚°·˛
+  if (typeof exports === 'object' && typeof module !== 'undefined') {
+    var _require = require;// eslint-disable-line no-undef
+    var _module = module;// eslint-disable-line no-undef
+    // required deps:
+    if (typeof _ === 'undefined') {
+      try {
+        _ = _require('@sailshq/lodash');
+      } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
+    }//ﬁ
+    if (typeof _ === 'undefined') {
+      try {
+        _ = _require('lodash');
+      } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
+    }//ﬁ
+
+    // optional deps:
+    try { $ = _require('jquery'); } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
+    try {
+
+      io = _require('socket.io-client');
+      var sailsIO = _require('sails.io.js');
+
+      // Instantiate the library (and start auto-connecting)
+      io = sailsIO(io);
+
+      // Disable logging
+      io.sails.environment = 'production';
+
+      // Note that, if there is no location global, then after one tick,
+      // if `io.sails.url` has still not been set, weird errors will emerge.
+      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      // FUTURE: figure out a way to provide a better err msg about this--
+      // i.e. specifically the case where `.setup()` isn't called within one tick.
+      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    } catch (err) {
+      if (err.code === 'MODULE_NOT_FOUND') {
+        // that's ok-- just make sure and unwind any vars that might have
+        // gotten partially set up, since we attempted to require more than
+        // one thing above (and e.g. the second `require()` might have failed)
+        io = undefined;
+      } else {
+        throw err;
+      }
+    }
+
+    SAILS_LOCALS = undefined;
+
+    // export:
+    _module.exports = factory(_, io, $, SAILS_LOCALS, location, File, FormData);
+  }
+  //˙°˚°·
+  //‡AMD ˚¸
+  else if(typeof define === 'function' && define.amd) {// eslint-disable-line no-undef
+    throw new Error('Global `define()` function detected, but built-in AMD support in `cloud.js` is not currently recommended.  To resolve this, modify `cloud.js`.');
+    // var _define = define;// eslint-disable-line no-undef
+    // _define(['_', 'sails.io.js', '$', 'SAILS_LOCALS', 'location', 'file'], factory);
+  }
+  //˙°˚˙°·
+  //‡NUDE ˚°·˛
+  else {
+    // required deps:
+    if (!global._) { throw new Error('`_` global does not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the Lodash library is getting brought in before `cloud`.)'); }
+    _ = global._;
+    // optional deps:
+    if (global.io !== undefined) {
+      if (typeof global.io !== 'function') {
+        throw new Error('Could not access `io.socket`: The `io` global is invalid at the moment:' + global.io + '\n(If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the sails.io.js library is getting brought in before `cloud`.)');
+      }
+      else if (typeof global.io.socket === 'undefined') {
+        throw new Error('Could not access `io.socket`: `io` does not have a `socket` property.  Make sure `sails.io.js` is being injected in a <script> tag!');
+      }
+      else {
+        io = global.io;
+      }
+    }//ﬁ
+    if (global.$ !== undefined) {
+      if (typeof global.$ !== 'function') {
+        throw new Error('The `$` global is not valid at the moment:' + global.$ + '\n(If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the jQuery library is getting brought in before `cloud`.)');
+      }
+      else {
+        $ = global.$;
+      }
+    }//ﬁ
+    if (global.SAILS_LOCALS !== undefined) {
+      if (!_.isObject(global.SAILS_LOCALS)) {
+        throw new Error('The `SAILS_LOCALS` global is not valid at the moment:' + global.SAILS_LOCALS + '\n(Please check and make sure you are using `<%- exposeLocalsToBrowser() %>` in your server-side view *before* the rest of your scripts.)');
+      }
+      else {
+        SAILS_LOCALS = global.SAILS_LOCALS;
+      }
+    }//ﬁ
+
+    // export:
+    if (global.Cloud) { throw new Error('Cannot expose global variable: Conflicting global (`cloud`) already exists!'); }
+    global.Cloud = factory(_, io, $, SAILS_LOCALS, location, File, FormData);
+  }
+});//…)

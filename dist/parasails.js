@@ -2,7 +2,7 @@
  * parasails.js
  * (lightweight structures for apps with more than one page)
  *
- * v0.7.1
+ * v0.7.2
  *
  * Copyright 2014-present, Mike McNeil (@mikermcneil)
  * MIT License
@@ -15,73 +15,9 @@
  * > around Vue.js and Lodash, with optional participation from jQuery, bowser,
  * > and VueRouter.
  */
-(function(global, factory){
-  var Vue;
-  var _;
-  var VueRouter;
-  var $;
-  var bowser;
-
-  //˙°˚°·.
-  //‡CJS  ˚°˚°·˛
-  if (typeof exports === 'object' && typeof module !== 'undefined') {
-    var _require = require;// eslint-disable-line no-undef
-    var _module = module;// eslint-disable-line no-undef
-    // required deps:
-    Vue = _require('vue');
-    _ = _require('lodash');
-    // optional deps:
-    try { VueRouter = _require('vue-router'); } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
-    try { $ = _require('jquery'); } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
-    try { bowser = _require('bowser'); } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
-    // export:
-    _module.exports = factory(Vue, _, VueRouter, $, bowser);
-  }
-  //˙°˚°·
-  //‡AMD ˚¸
-  else if(typeof define === 'function' && define.amd) {// eslint-disable-line no-undef
-    // Register as an anonymous module.
-    define([], function () {// eslint-disable-line no-undef
-      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      // FUTURE: maybe use optional dep. loading here instead?
-      // e.g.  `function('vue', 'lodash', 'vue-router', 'jquery')`
-      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      // required deps:
-      if (!global.Vue) { throw new Error('`Vue` global does not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the Vue.js library is getting brought in before `parasails`.)'); }
-      Vue = global.Vue;
-      if (!global._) { throw new Error('`_` global does not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the Lodash library is getting brought in before `parasails`.)'); }
-      _ = global._;
-      // optional deps:
-      VueRouter = global.VueRouter || undefined;
-      $ = global.$ || global.jQuery || undefined;
-      bowser = global.bowser || undefined;
-
-      // So... there's not really a huge point to supporting AMD here--
-      // except that if you're using it in your project, it makes this
-      // module fit nicely with the others you're using.  And if you
-      // really hate globals, I guess there's that.
-      // ¯\_(ツ)_/¯
-      return factory(Vue, _, VueRouter, $, bowser);
-    });//ƒ
-  }
-  //˙°˚˙°·
-  //‡NUDE ˚°·˛
-  else {
-    // required deps:
-    if (!global.Vue) { throw new Error('`Vue` global does not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the Vue.js library is getting brought in before `parasails`.)'); }
-    Vue = global.Vue;
-    if (!global._) { throw new Error('`_` global does not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the Lodash library is getting brought in before `parasails`.)'); }
-    _ = global._;
-    // optional deps:
-    VueRouter = global.VueRouter || undefined;
-    $ = global.$ || global.jQuery || undefined;
-    bowser = global.bowser || undefined;
-    // export:
-    if (global.parasails) { throw new Error('Conflicting global (`parasails`) already exists!'); }
-    global.parasails = factory(Vue, _, VueRouter, $, bowser);
-  }
-})(this, function (Vue, _, VueRouter, $, bowser){
-
+(function(factory, exposeUMD){
+  exposeUMD(this, factory);
+})(function (Vue, _, VueRouter, $, bowser){
 
   //  ██████╗ ██████╗ ██╗██╗   ██╗ █████╗ ████████╗███████╗
   //  ██╔══██╗██╔══██╗██║██║   ██║██╔══██╗╚══██╔══╝██╔════╝
@@ -879,4 +815,69 @@
 
   return parasails;
 
+}, function (global, factory) {
+  var Vue;
+  var _;
+  var VueRouter;
+  var $;
+  var bowser;
+
+  //˙°˚°·.
+  //‡CJS  ˚°˚°·˛
+  if (typeof exports === 'object' && typeof module !== 'undefined') {
+    var _require = require;// eslint-disable-line no-undef
+    var _module = module;// eslint-disable-line no-undef
+    // required deps:
+    Vue = _require('vue');
+    _ = _require('lodash');
+    // optional deps:
+    try { VueRouter = _require('vue-router'); } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
+    try { $ = _require('jquery'); } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
+    try { bowser = _require('bowser'); } catch (e) { if (e.code === 'MODULE_NOT_FOUND') {/* ok */} else { throw e; } }
+    // export:
+    _module.exports = factory(Vue, _, VueRouter, $, bowser);
+  }
+  //˙°˚°·
+  //‡AMD ˚¸
+  else if(typeof define === 'function' && define.amd) {// eslint-disable-line no-undef
+    // Register as an anonymous module.
+    define([], function () {// eslint-disable-line no-undef
+      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      // FUTURE: maybe use optional dep. loading here instead?
+      // e.g.  `function('vue', 'lodash', 'vue-router', 'jquery')`
+      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      // required deps:
+      if (!global.Vue) { throw new Error('`Vue` global does not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the Vue.js library is getting brought in before `parasails`.)'); }
+      Vue = global.Vue;
+      if (!global._) { throw new Error('`_` global does not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the Lodash library is getting brought in before `parasails`.)'); }
+      _ = global._;
+      // optional deps:
+      VueRouter = global.VueRouter || undefined;
+      $ = global.$ || global.jQuery || undefined;
+      bowser = global.bowser || undefined;
+
+      // So... there's not really a huge point to supporting AMD here--
+      // except that if you're using it in your project, it makes this
+      // module fit nicely with the others you're using.  And if you
+      // really hate globals, I guess there's that.
+      // ¯\_(ツ)_/¯
+      return factory(Vue, _, VueRouter, $, bowser);
+    });//ƒ
+  }
+  //˙°˚˙°·
+  //‡NUDE ˚°·˛
+  else {
+    // required deps:
+    if (!global.Vue) { throw new Error('`Vue` global does not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the Vue.js library is getting brought in before `parasails`.)'); }
+    Vue = global.Vue;
+    if (!global._) { throw new Error('`_` global does not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the Lodash library is getting brought in before `parasails`.)'); }
+    _ = global._;
+    // optional deps:
+    VueRouter = global.VueRouter || undefined;
+    $ = global.$ || global.jQuery || undefined;
+    bowser = global.bowser || undefined;
+    // export:
+    if (global.parasails) { throw new Error('Conflicting global (`parasails`) already exists!'); }
+    global.parasails = factory(Vue, _, VueRouter, $, bowser);
+  }
 });//…)
