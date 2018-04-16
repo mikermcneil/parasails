@@ -331,32 +331,7 @@
   ///////////////////////////////////////////////////////////////////////////////////////////
   if ($ && typeof window !== 'undefined' && window.SAILS_LOCALS && window.SAILS_LOCALS._environment !== 'production') {
 
-    // Configure Vue to share its beforeMount errors (and others) with us.
-    // > https://vuejs.org/v2/api/#errorHandler
-    Vue.config.errorHandler = function (err, vm, info) {
-      if (err && err.message) {
-        err.message = 'In '+info+': '+err.message;
-      } else {
-        var _originalErr = err;
-        err = new Error(_originalErr);
-        err.raw = _originalErr;
-      }
-      throw err;
-    };
-
-    // Bind top-level error handler on the window.
-    //
-    // This NEVER prevents the error from continuing to be uncaught- it's just here
-    // to ensure that if any JS errors occur, we notice them immediately, even if we
-    // don't have Chrome dev tools open.
-    //
-    // For more info about `window.onerror`, see:
-    // https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
-    window.onerror = function onUncaughtException(message, scriptSrc, lineNo, charNo, err){
-
-      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      // FUTURE: Include this in parasails by default (if jQuery is available)
-      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    var _displayErrorOverlay = function(errorSummary){
 
       if ($('#parasails-error-handler').length === 0) {
         // Very first error:
@@ -365,10 +340,14 @@
             '<h1>Whoops</h1>'+
             '<p>'+
               '<span role="summary">An unexpected client-side error occurred.</span><br/>'+
-              'Please check your browser\'s JavaScript console for details.<br/>'+
+              '<pre>'+_.trunc(errorSummary, {length: 350})+'</pre>'+
+              '<span>Please check your browser\'s JavaScript console for further details.</span><br/>'+
               '<small>This message will not be displayed in production.  '+
               'If you\'re unsure, <a href="https://sailsjs.com/support">ask for help</a>.</small><br/>'+
-              '<small>'+(new Date())+'</small>'+
+              '<small>'+_.escape(new Date())+'</small>'+
+              // '<br/><br/>'+
+              // '<span>High-level summary:</span>'+
+              // '<code><pre>'+_.escape(errorSummary)+'</pre></code>'+
             '</p>'+
           '</div>'+
         '</div>')
@@ -398,6 +377,19 @@
           color: '#cccccc'
         });
 
+        $('#parasails-error-handler [role="error-handler-content"] pre').css({
+          color: '#ff5555',
+          display: 'block',
+          'background': '#112f1f',
+          'white-space': 'pre-wrap',
+          'padding': '10px',
+          'margin-left': 'auto',
+          'margin-right': 'auto',
+          'max-width': '500px',
+          'min-width': '280px',
+          'font-size': '11px'
+        });
+
         $('#parasails-error-handler [role="error-handler-content"] a').css({
           'text-decoration': 'underline',
           color: '#cccccc'
@@ -414,7 +406,49 @@
       // with fire for now.  Just getting access to this is enough.
       // We allow the error to continue to be uncaught.
       return false;
-    };//œ </ on uncaught error >
+    };//ƒ
+
+    // Bind top-level error handler on the window.
+    //
+    // This NEVER prevents the error from continuing to be uncaught- it's just here
+    // to ensure that if any JS errors occur, we notice them immediately, even if we
+    // don't have Chrome dev tools open.
+    //
+    // For more info about `window.onerror`, see:
+    // https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
+    window.onerror = function(message, scriptSrc, lineNo, charNo, err) {
+      _displayErrorOverlay(err&&err.message? err.message : message);
+    };//œ   </ on uncaught error >
+
+    // Configure Vue to share its beforeMount errors (and others) with us.
+    // > https://vuejs.org/v2/api/#errorHandler
+    Vue.config.errorHandler = function (err, unusedVm, errorSourceDisplayName) {
+      if (err && err.message) {
+        if (errorSourceDisplayName === 'render function') {
+          err.message = 'In the HTML template (during render): '+err.message;
+        } else {
+          err.message = 'In '+errorSourceDisplayName+': '+err.message;
+        }
+        // err.message += '\n [?] If you\'re unsure, get help: https://sailsjs.com/support';
+      } else {
+        var _originalNotActuallyErr = err;
+        err = new Error(_originalNotActuallyErr);
+        err.raw = _originalNotActuallyErr;
+      }
+      console.error(err);
+      _displayErrorOverlay(err);
+    };//ƒ
+
+    // Also those warnings -- but we'll treat them like errors because
+    // we're serious about code quality.  (Plus, early detection of bugs
+    // and typos saves so much time down the road!)
+    // > `trace` is the component hierarchy trace
+    Vue.config.warnHandler = function (msg, unusedVm, unusedTrace) {
+      throw new Error(
+        msg + '\n\n'+
+        'Expand this error and check out the stack trace for more info.'
+      );
+    };//ƒ
 
   }//ﬁ
 
@@ -684,8 +718,13 @@
     if (def.methods && def.methods.goto) { throw new Error('Page script definition contains `methods` with a `goto` key-- but you\'re not allowed to override that'); }
     def.methods = def.methods || {};
     if (VueRouter) {
+      var _virtualPagesRegExp = def.virtualPagesRegExp;
       def.methods.goto = function (rootRelativeUrlOrOpts){
-        return this.$router.push(rootRelativeUrlOrOpts);
+        if (_virtualPagesRegExp && _.isString(rootRelativeUrlOrOpts) && !rootRelativeUrlOrOpts.match(_virtualPagesRegExp)) {
+          window.location = rootRelativeUrlOrOpts;
+        } else {
+          return this.$router.push(rootRelativeUrlOrOpts);
+        }
       };
     }
     else {
