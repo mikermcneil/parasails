@@ -1695,7 +1695,7 @@
             throw err;
           }
         };//ƒ
-        io.socket.on(socketEventName, actualHandler);//œ
+
       } else if (_.isFunction(handleSocketMsg)) {
         // Otherwise, just run the handler function.
         actualHandler = handleSocketMsg;
