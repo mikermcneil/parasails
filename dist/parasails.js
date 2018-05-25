@@ -765,13 +765,15 @@
           // console.log('this.$find(\'router-view\').length', this.$find('router-view').length);
           if (this.$find('router-view').length === 0) {
             throw new Error(
-              'Cannot mount this page with `virtualPages: true` because no '+
-              '<router-view> element exists in this page\'s HTML.\n'+
-              'Please be sure the HTML includes:\n'+
-              '\n'+
-              '```\n'+
-              '<router-view></router-view>\n'+
-              '```\n'
+              _.escape(
+                'Cannot mount this page with `virtualPages: true` because no '+
+                '<router-view> element exists in this page\'s HTML.\n'+
+                'Please be sure the HTML includes:\n'+
+                '\n'+
+                '```\n'+
+                '<router-view></router-view>\n'+
+                '```\n'
+              )
             );
           }//•
 
