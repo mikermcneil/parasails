@@ -340,7 +340,7 @@
             '<h1>Whoops</h1>'+
             '<p>'+
               '<span role="summary">An unexpected client-side error occurred.</span><br/>'+
-              '<pre>'+_.trunc(errorSummary, {length: 350})+'</pre>'+
+              _escape('<pre>'+_.trunc(errorSummary, {length: 350})+'</pre>')+
               '<span>Please check your browser\'s JavaScript console for further details.</span><br/>'+
               '<small>This message will not be displayed in production.  '+
               'If you\'re unsure, <a href="https://sailsjs.com/support">ask for help</a>.</small><br/>'+
@@ -765,15 +765,13 @@
           // console.log('this.$find(\'router-view\').length', this.$find('router-view').length);
           if (this.$find('router-view').length === 0) {
             throw new Error(
-              _.escape(
-                'Cannot mount this page with `virtualPages: true` because no '+
-                '<router-view> element exists in this page\'s HTML.\n'+
-                'Please be sure the HTML includes:\n'+
-                '\n'+
-                '```\n'+
-                '<router-view></router-view>\n'+
-                '```\n'
-              )
+              'Cannot mount this page with `virtualPages: true` because no '+
+              '<router-view> element exists in this page\'s HTML.\n'+
+              'Please be sure the HTML includes:\n'+
+              '\n'+
+              '```\n'+
+              '<router-view></router-view>\n'+
+              '```\n'
             );
           }//•
 
