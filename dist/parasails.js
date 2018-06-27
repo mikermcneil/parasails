@@ -340,7 +340,7 @@
             '<h1>Whoops</h1>'+
             '<p>'+
               '<span role="summary">An unexpected client-side error occurred.</span><br/>'+
-              _escape('<pre>'+_.trunc(errorSummary, {length: 350})+'</pre>')+
+              '<pre>'+_.escape(_.trunc(errorSummary, {length: 350}))+'</pre>'+
               '<span>Please check your browser\'s JavaScript console for further details.</span><br/>'+
               '<small>This message will not be displayed in production.  '+
               'If you\'re unsure, <a href="https://sailsjs.com/support">ask for help</a>.</small><br/>'+
