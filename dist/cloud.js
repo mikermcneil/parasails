@@ -716,6 +716,9 @@
                       // Skip `undefined` values to more accurately mirror
                       // the behavior of JSON.stringify()
                       if (value === undefined) { return; }
+                      if (_.isObject(value)) {
+                        throw new Error('Could not encode value provided for '+fieldName+' because this request also contains file uploads.  In a request that contains one or more file uploads, any additional text parameter values must be primitives (strings, numbers, booleans, or `null`).  To encode complex structures like dictionaries and arrays, bust them apart into separate fields before sending the request, or use JSON.stringify() in front-end userland code to encode the data into a string before transmitting.  (If you go with the latter option, just be sure to also expect and decode the string value accordingly using JSON.parse() in your backend code).');
+                      }
                       ajaxOpts.data.append(fieldName, value);
                     });
                     _.each(filesByFieldName, function(file, fieldName){
