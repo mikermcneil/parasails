@@ -142,9 +142,17 @@
       html5History: 'html5HistoryMode',
       historyMode: 'html5HistoryMode',
     };
-    _.each(_.intersection(_.keys(RECOMMENDATIONS_BY_UNRECOGNIZED_KEY),_.keys(def)), function (propertyName) {
-      if (def[propertyName] !== undefined) {
-        throw new Error('Detected unrecognized and potentially confusing key "'+propertyName+'" on the top level of '+currentModuleEntityNoun+' definition.  Did you mean "'+RECOMMENDATIONS_BY_UNRECOGNIZED_KEY[propertyName]+'"?');
+    // > Note that this determination of whether to show a more precise
+    // > "Did you mean?" error message is a case-_insensitive_ check.
+    var lowercasedRecommendationsByKey = _.reduce(RECOMMENDATIONS_BY_UNRECOGNIZED_KEY, function(memo, correctAlias, incorrectKey){
+      memo[incorrectKey.toLowerCase()] = correctAlias;
+      return memo;
+    }, {});
+    _.each(def, function (x, propertyName) {
+      if (x !== undefined) {
+        if (_.contains(_.keys(RECOMMENDATIONS_BY_UNRECOGNIZED_KEY), propertyName) || _.contains(_.keys(lowercasedRecommendationsByKey), propertyName.toLowerCase())) {
+          throw new Error('Detected unrecognized and potentially confusing key "'+propertyName+'" on the top level of '+currentModuleEntityNoun+' definition.  Did you mean "'+lowercasedRecommendationsByKey[propertyName.toLowerCase()]+'"?');
+        }
       }
     });//∞
 
@@ -158,6 +166,8 @@
     // > This is particularly useful for catching loose top-level properties
     // > that were intended to be within `data` or `methods`, etc.)
     if (currentModuleEntityNoun === 'page script' || currentModuleEntityNoun === 'component') {
+      // FUTURE: don't allow page-script only things on components
+
       var LEGAL_TOP_LVL_KEYS = [
         // Everyday page script stuff:
         'beforeMount',
@@ -232,6 +242,8 @@
         'provide',
         'inject'
       ];
+      // FUTURE: change this to a case-insensitive check to do a better job helping
+      // out a user who is trying to use e.g. "beforemount", without a capital "M"
       _.each(_.difference(_.keys(def), LEGAL_TOP_LVL_KEYS), function (propertyName) {
         if (def[propertyName] !== undefined) {
           throw new Error('Detected unrecognized key "'+propertyName+'" on the top level of '+currentModuleEntityNoun+' definition.  Did you perhaps intend for `'+propertyName+'` to be included as a nested key within `data` or `methods`?  Please check on that and try again.  If you\'re unsure, or you\'re deliberately attempting to use a Vue.js feature that relies on having a top-level property named `'+propertyName+'`, then please remove this check from the parasails.js library in your project, or drop by https://sailsjs.com/support for assistance.');
