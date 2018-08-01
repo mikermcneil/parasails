@@ -2,7 +2,7 @@
  * parasails.js
  * (lightweight structures for apps with more than one page)
  *
- * v0.7.6
+ * v0.7.7-pre
  *
  * Copyright 2014-present, Mike McNeil (@mikermcneil)
  * MIT License
@@ -129,10 +129,18 @@
     // or "beforeDestroyed", because those definitely aren't real things.
     var RECOMMENDATIONS_BY_UNRECOGNIZED_KEY = {
       beforeMounted: 'beforeMount',
+      beforeMounting: 'beforeMount',
       beforeDestroyed: 'beforeDestroy',
+      beforeDestroying: 'beforeDestroy',
       events: 'methods',
       functions: 'methods',
-      state: 'data'
+      state: 'data',
+      virtualPageRegExp: 'virtualPagesRegExp',
+      virtualPageRegEx: 'virtualPagesRegExp',
+      virtualPagesRegEx: 'virtualPagesRegExp',
+      virtualPage: 'virtualPages',
+      html5History: 'html5HistoryMode',
+      historyMode: 'html5HistoryMode',
     };
     _.each(_.intersection(_.keys(RECOMMENDATIONS_BY_UNRECOGNIZED_KEY),_.keys(def)), function (propertyName) {
       if (def[propertyName] !== undefined) {
@@ -731,160 +739,169 @@
       def.methods.goto = function (){ throw new Error('Cannot use .goto() method because, at the time when this page script was registered, VueRouter did not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure VueRouter is getting brought in before `parasails`.)'); };
     }
 
-    // If virtualPages was specified, check usage and then...
+    // If virtualPages-related stuff was specified, check usage and tolerate shorthand.
+    if (def.virtualPages === undefined) {
+      if (def.virtualPagesRegExp) {
+        def.virtualPages = true;
+      }
+    } else if (_.isObject(def.virtualPages) && !_.isArray(def.virtualPages) && !_.isFunction(def.virtualPages)) {
+      throw new Error('This usage of `virtualPages` (as a dictionary) is no longer supported.  Instead, please use `virtualPages: true`.  [?] https://sailsjs.com/support');
+      // (^^ old implementation removed in https://github.com/mikermcneil/parasails/commit/20af5992097de788b58ae2cb517675f235798879)
+    } else if (!_.isBoolean(def.virtualPages)) {
+      throw new Error('Cannot use `virtualPages` because the specified value doesn\'t match any recognized meaning.  Please specify either `true` (for the default handling) or a dictionary of client-side routing rules.');
+    }//ﬁ
     if (def.virtualPages && def.router) { throw new Error('Cannot specify both `virtualPages` AND an actual Vue `router`!  Use one or the other.'); }
     if (def.router && !VueRouter) { throw new Error('Cannot use `router`, because that depends on the Vue Router.  But `VueRouter` does not exist on the page yet.  (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the VueRouter plugin is getting brought in before `parasails`.)'); }
     if (!def.virtualPages && def.html5HistoryMode !== undefined) { throw new Error('Cannot specify `html5HistoryMode` without also specifying `virtualPages`!'); }
     if (!def.virtualPages && def.beforeEach !== undefined) { throw new Error('Cannot specify `beforeEach` without also specifying `virtualPages`!'); }
     if ((def.beforeNavigate || def.afterNavigate) && def.virtualPages !== true) { throw new Error('Cannot specify `beforeNavigate` or `afterNavigate` unless you set `virtualPages: true`!'); }
-    if (def.virtualPages !== undefined) {
+
+    // If `virtualPages: true` was specified, then use reasonable defaults:
+    //
+    // > Note: This assumes that, somewhere within the parent page's template, there is:
+    // > ```
+    // > <router-view></router-view>
+    // > ```
+    if (def.virtualPages === true) {
       if (!VueRouter) { throw new Error('Cannot use `virtualPages`, because it depends on the Vue Router.  But `VueRouter` does not exist on the page yet.  (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the VueRouter plugin is getting brought in before `parasails`.)'); }
+      if (def.beforeEach !== undefined) { throw new Error('Cannot specify `virtualPages: true` AND `beforeEach` at the same time!'); }
+      if (!def.virtualPagesRegExp && def.html5HistoryMode === 'history') { throw new Error('If `html5HistoryMode: \'history\'` is specified, then virtualPagesRegExp must also be specified!'); }
+      if (def.virtualPagesRegExp && !_.isRegExp(def.virtualPagesRegExp)) { throw new Error('Invalid `virtualPagesRegExp`: If specified, this must be a regular expression -- e.g. `/^\/manage\/access\/?([^\/]+)?/`'); }
+      if (def.html5HistoryMode === undefined) {
+        if (def.virtualPagesRegExp) {
+          def.html5HistoryMode = 'history';
+        } else {
+          def.html5HistoryMode = 'hash';
+        }
+      } else if (def.html5HistoryMode !== 'history' && def.html5HistoryMode !== 'hash') { throw new Error('Invalid `html5HistoryMode`: If specified, this must be either "history" or "hash".'); }
+
+      // Check for <router-view> element
+      // (to provide a better error msg if it was omitted)
+      var customBeforeMountLC;
+      if (def.beforeMount) {
+        customBeforeMountLC = def.beforeMount;
+      }//ﬁ
+      def.beforeMount = function(){
+
+        // Inject additional code to check for <router-view> element:
+        // console.log('this.$find(\'router-view\').length', this.$find('router-view').length);
+        if (this.$find('router-view').length === 0) {
+          throw new Error(
+            'Cannot mount this page with `virtualPages: true` because no '+
+            '<router-view> element exists in this page\'s HTML.\n'+
+            'Please be sure the HTML includes:\n'+
+            '\n'+
+            '```\n'+
+            '<router-view></router-view>\n'+
+            '```\n'
+          );
+        }//•
+
+        // Then call the original, custom "beforeMount" function, if there was one.
+        if (customBeforeMountLC) {
+          customBeforeMountLC.apply(this, []);
+        }
+      };//ƒ
+
+      if (def.methods._handleVirtualNavigation) {
+        throw new Error('Could not use `virtualPages: true`, because a conflicting `_handleVirtualNavigation` method is defined.  Please remove it, or do something else.');
+      }
+
+      // Set up local variables to refer to things in `def`, since it will be changing below.
+      var pathMatchingRegExp;
+      if (def.html5HistoryMode === 'history') {
+        pathMatchingRegExp = def.virtualPagesRegExp;
+      } else {
+        pathMatchingRegExp = /.*/;
+      }
+
+      var beforeNavigate = def.beforeNavigate;
+      var afterNavigate = def.afterNavigate;
+
+      // Now modify the definition's methods and remove all relevant top-level props understood
+      // by parasails (but not by Vue.js) to avoid creating any weird additional dependence on
+      // parasails features beyond the expected usage.
+
+      def.methods = _.extend(def.methods||{}, {
+        _handleVirtualNavigation: function(virtualPageSlug){
+
+          if (beforeNavigate) {
+            var resultFromBeforeNavigate = beforeNavigate.apply(this, [ virtualPageSlug ]);
+            if (resultFromBeforeNavigate === false) {
+              return false;
+            }//•
+          }
+
+          this.virtualPageSlug = virtualPageSlug;
+
+          // console.log('navigate!  Got:', arguments);
+          // console.log('Navigated. (Set `this.virtualPageSlug=\''+virtualPageSlug+'\'`)');
+
+          if (afterNavigate) {
+            afterNavigate.apply(this, [ virtualPageSlug ]);
+          }
+
+        }
+      });
 
       // Now we'll replace `virtualPages` in our def with the thing that VueRouter actually expects:
+      def = _.extend({
+        router: new VueRouter({
+          mode: def.html5HistoryMode,
+          routes: [
+            {
+              path: '*',
+              component: (function(){
+                var vueComponentDef = {
+                  render: function(){},
+                  beforeRouteUpdate: function (to,from,next){
+                    // this.$emit('navigate', to.path); <<old way
+                    var path = to.path;
+                    var matches = path.match(pathMatchingRegExp);
+                    if (!matches) {
+                      var err =new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`');
+                      err.code = 'E_DID_NOT_MATCH_REGEXP';
+                      throw err;
+                    }//•
 
-      // If `virtualPages: true` was specified, then use reasonable defaults:
-      //
-      // > Note: This assumes that, somewhere within the parent page's template, there is:
-      // > ```
-      // > <router-view></router-view>
-      // > ```
-      if (def.virtualPages === true) {
-        if (def.beforeEach !== undefined) { throw new Error('Cannot specify `virtualPages: true` AND `beforeEach` at the same time!'); }
-        if (!def.virtualPagesRegExp && def.html5HistoryMode === 'history') { throw new Error('If `html5HistoryMode: \'history\'` is specified, then virtualPagesRegExp must also be specified!'); }
-        if (def.virtualPagesRegExp && !_.isRegExp(def.virtualPagesRegExp)) { throw new Error('Invalid `virtualPagesRegExp`: If specified, this must be a regular expression -- e.g. `/^\/manage\/access\/?([^\/]+)?/`'); }
+                    // console.log('this.$parent', this.$parent);
+                    this.$parent._handleVirtualNavigation(matches[1]||'');
+                    // this.$emit('navigate', {
+                    //   rawPath: path,
+                    //   virtualPageSlug: matches[1]||''
+                    // });
+                    return next();
+                  },
+                  mounted: function(){
+                    // this.$emit('navigate', this.$route.path); <<old way
+                    var path = this.$route.path;
+                    var matches = path.match(pathMatchingRegExp);
+                    if (!matches) {
+                      var err =new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`');
+                      err.code = 'E_DID_NOT_MATCH_REGEXP';
+                      throw err;
+                    }//•
 
-        // Check for <router-view> element
-        // (to provide a better error msg if it was omitted)
-        var customBeforeMountLC;
-        if (def.beforeMount) {
-          customBeforeMountLC = def.beforeMount;
-        }//ﬁ
-        def.beforeMount = function(){
+                    this.$parent._handleVirtualNavigation(matches[1]||'');
+                    // this.$emit('navigate', {
+                    //   rawPath: path,
+                    //   virtualPageSlug: matches[1]||''
+                    // });
+                  }
+                };
+                // Expose extra methods on virtual page script, if jQuery is available.
+                _exposeBonusMethods(vueComponentDef, 'virtual page');
 
-          // Inject additional code to check for <router-view> element:
-          // console.log('this.$find(\'router-view\').length', this.$find('router-view').length);
-          if (this.$find('router-view').length === 0) {
-            throw new Error(
-              'Cannot mount this page with `virtualPages: true` because no '+
-              '<router-view> element exists in this page\'s HTML.\n'+
-              'Please be sure the HTML includes:\n'+
-              '\n'+
-              '```\n'+
-              '<router-view></router-view>\n'+
-              '```\n'
-            );
-          }//•
+                // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
+                _wrapMethodsAndVerifyNoArrowFunctions(vueComponentDef, 'virtual page');
 
-          // Then call the original, custom "beforeMount" function, if there was one.
-          if (customBeforeMountLC) {
-            customBeforeMountLC.apply(this, []);
-          }
-        };//ƒ
-
-        if (def.methods._handleVirtualNavigation) {
-          throw new Error('Could not use `virtualPages: true`, because a conflicting `_handleVirtualNavigation` method is defined.  Please remove it, or do something else.');
-        }
-
-        // Set up local variables to refer to things in `def`, since it will be changing below.
-        var pathMatchingRegExp;
-        if (def.html5HistoryMode === 'history') {
-          pathMatchingRegExp = def.virtualPagesRegExp;
-        } else {
-          pathMatchingRegExp = /.*/;
-        }
-
-        var beforeNavigate = def.beforeNavigate;
-        var afterNavigate = def.afterNavigate;
-
-        // Now modify the definition's methods and remove all relevant top-level props understood
-        // by parasails (but not by Vue.js) to avoid creating any weird additional dependence on
-        // parasails features beyond the expected usage.
-
-        def.methods = _.extend(def.methods||{}, {
-          _handleVirtualNavigation: function(virtualPageSlug){
-
-            if (beforeNavigate) {
-              var resultFromBeforeNavigate = beforeNavigate.apply(this, [ virtualPageSlug ]);
-              if (resultFromBeforeNavigate === false) {
-                return false;
-              }//•
+                return vueComponentDef;
+              })()
             }
-
-            this.virtualPageSlug = virtualPageSlug;
-
-            // console.log('navigate!  Got:', arguments);
-            // console.log('Navigated. (Set `this.virtualPageSlug=\''+virtualPageSlug+'\'`)');
-
-            if (afterNavigate) {
-              afterNavigate.apply(this, [ virtualPageSlug ]);
-            }
-
-          }
-        });
-
-        def = _.extend({
-          router: new VueRouter({
-            mode: def.html5HistoryMode || 'hash',
-            routes: [
-              {
-                path: '*',
-                component: (function(){
-                  var vueComponentDef = {
-                    render: function(){},
-                    beforeRouteUpdate: function (to,from,next){
-                      // this.$emit('navigate', to.path); <<old way
-                      var path = to.path;
-                      var matches = path.match(pathMatchingRegExp);
-                      if (!matches) {
-                        var err =new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`');
-                        err.code = 'E_DID_NOT_MATCH_REGEXP';
-                        throw err;
-                      }//•
-
-                      // console.log('this.$parent', this.$parent);
-                      this.$parent._handleVirtualNavigation(matches[1]||'');
-                      // this.$emit('navigate', {
-                      //   rawPath: path,
-                      //   virtualPageSlug: matches[1]||''
-                      // });
-                      return next();
-                    },
-                    mounted: function(){
-                      // this.$emit('navigate', this.$route.path); <<old way
-                      var path = this.$route.path;
-                      var matches = path.match(pathMatchingRegExp);
-                      if (!matches) {
-                        var err =new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`');
-                        err.code = 'E_DID_NOT_MATCH_REGEXP';
-                        throw err;
-                      }//•
-
-                      this.$parent._handleVirtualNavigation(matches[1]||'');
-                      // this.$emit('navigate', {
-                      //   rawPath: path,
-                      //   virtualPageSlug: matches[1]||''
-                      // });
-                    }
-                  };
-                  // Expose extra methods on virtual page script, if jQuery is available.
-                  _exposeBonusMethods(vueComponentDef, 'virtual page');
-
-                  // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
-                  _wrapMethodsAndVerifyNoArrowFunctions(vueComponentDef, 'virtual page');
-
-                  return vueComponentDef;
-                })()
-              }
-            ],
-          })
-        }, _.omit(def, ['virtualPages', 'virtualPagesRegExp', 'html5HistoryMode', 'beforeNavigate', 'afterNavigate']));
-      } else if (_.isObject(def.virtualPages) && !_.isArray(def.virtualPages) && !_.isFunction(def.virtualPages)) {
-        throw new Error('This usage of `virtualPages` (as a dictionary) is no longer supported.  Instead, please use `virtualPages: true`.  [?] https://sailsjs.com/support');
-        // (old implementation removed in https://github.com/mikermcneil/parasails/commit/20af5992097de788b58ae2cb517675f235798879)
-      } else {
-        throw new Error('Cannot use `virtualPages` because the specified value doesn\'t match any recognized meaning.  Please specify either `true` (for the default handling) or a dictionary of client-side routing rules.');
-      }
-    }//ﬁ  </ def has `virtualPages` >
+          ],
+        })
+      }, _.omit(def, ['virtualPages', 'virtualPagesRegExp', 'html5HistoryMode', 'beforeNavigate', 'afterNavigate']));
+    }//ﬁ  </ def has `virtualPages` enabled >
 
     // Construct Vue instance for this page script.
     var vm = new Vue(def);
