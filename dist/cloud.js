@@ -654,6 +654,7 @@
               if (FormData && textParamsByFieldName) {
                 textParamsByFieldName = _.extend({}, textParamsByFieldName);
                 _.each(textParamsByFieldName, function(value, fieldName){
+                  // FUTURE: Also support passing in an array of File instances (as an alternative to a FileList)
                   if (_.isObject(value) && ((File && value instanceof File)||(FileList && value instanceof FileList))) {
                     uploadsByFieldName[fieldName] = value;
                     delete textParamsByFieldName[fieldName];
@@ -727,7 +728,14 @@
                       if (!_.isObject(fileOrFileList) || !_.isObject(fileOrFileList.constructor) || (fileOrFileList.constructor.name !== 'File' && fileOrFileList.constructor.name !== 'FileList')) {
                         throw new Error('Cannot upload as '+fieldName+' because the provided value is not a File or FileList instance.  Instead, got:'+fileOrFileList+'\n\nNote that this can also sometimes occur due to problems with code minification (e.g. uglify configuration).');
                       }
-                      ajaxOpts.data.append(fieldName, fileOrFileList, fileOrFileList.name);
+                      if (fileOrFileList.constructor.name === 'FileList') {
+                        for (var i = 0; i < fileOrFileList.length; i++) {
+                          ajaxOpts.data.append(fieldName, fileOrFileList[i], fileOrFileList.name);
+                        }//∞
+                      }
+                      else {
+                        ajaxOpts.data.append(fieldName, fileOrFileList, fileOrFileList.name);
+                      }
                     });
                   }
                   // Otherwise, attach params as a JSON-encoded request body.
