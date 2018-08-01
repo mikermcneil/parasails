@@ -725,7 +725,7 @@
                       // Skip `undefined` values for consistency.
                       if (fileOrFileList === undefined) { return; }
                       if (!_.isObject(fileOrFileList) || !_.isObject(fileOrFileList.constructor) || (fileOrFileList.constructor.name !== 'File' && fileOrFileList.constructor.name !== 'FileList')) {
-                        throw new Error('Cannot upload as '+fieldName+' because the provided value is not a File or FileList instance.  Instead, got:'+fileOrFileList);
+                        throw new Error('Cannot upload as '+fieldName+' because the provided value is not a File or FileList instance.  Instead, got:'+fileOrFileList+'\n\nNote that this can also sometimes occur due to problems with code minification (e.g. uglify configuration).');
                       }
                       ajaxOpts.data.append(fieldName, fileOrFileList, fileOrFileList.name);
                     });
