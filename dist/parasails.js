@@ -2,7 +2,7 @@
  * parasails.js
  * (lightweight structures for apps with more than one page)
  *
- * v0.7.7
+ * v0.7.8-x
  *
  * Copyright 2014-present, Mike McNeil (@mikermcneil)
  * MIT License
@@ -249,6 +249,47 @@
           throw new Error('Detected unrecognized key "'+propertyName+'" on the top level of '+currentModuleEntityNoun+' definition.  Did you perhaps intend for `'+propertyName+'` to be included as a nested key within `data` or `methods`?  Please check on that and try again.  If you\'re unsure, or you\'re deliberately attempting to use a Vue.js feature that relies on having a top-level property named `'+propertyName+'`, then please remove this check from the parasails.js library in your project, or drop by https://sailsjs.com/support for assistance.');
         }
       });//∞
+    }//ﬁ
+
+    // Mix in overridable default filters
+    def.filters = def.filters || {};
+    if (!def.filters.currency) {
+      // FUTURE: mix in our go-to currency filter
+    }//ﬁ
+    if (!def.filters.round) {
+      /**
+       * Usage:
+       * - `{{someValue | round}}`
+       * - `{{someValue | round(1)}}`
+       * - `{{someValue | round(2)}}`
+       * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+       * @param  {Ref} value
+       * @param  {Number} accuracy
+       * @param  {Boolean} chopTrailingZeros
+       * @return {String}
+       * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+       * > The following is a modified version of:
+       * > vue-round-filter@1.1.2
+       * > c. 2016, Damian Martyniak (ISC License)
+       * > https://github.com/rascada/vue-round-filter/blob/6529a384758b67ed54884b77e03dd73cc3dda215/index.js
+       * > Originally updated for explicitness, to ensure Vue ≥2.x compatibility,
+       * > and to change default usage to always preserve decimal accuracy.  It
+       * > could likely wind up with additional updates over time.
+       * > All edits are MIT licensed. Copyright (c) Mike McNeil, 2018-present
+       */
+      def.filters.round = function (value, accuracy, chopTrailingZeros) {
+        if (typeof value !== 'number') {
+          return ('' + value);
+        }//•
+        var result = value.toFixed(accuracy);
+        if (chopTrailingZeros) {
+          // (don't keep decimal accuracy, just chop off those trailing zeros)
+          return ('' + (+result));
+        } else {
+          // (keep decimal accuracy)
+          return ('' + result);
+        }
+      };//ƒ
     }//ﬁ
 
     // Wrap and verify methods:
