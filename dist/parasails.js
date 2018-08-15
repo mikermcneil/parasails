@@ -898,7 +898,7 @@
 
       // Automatically attach `virtualPageSlug` to `data`, for convenience.
       if (def.data && def.data.virtualPageSlug !== undefined && !_.isString(def.data.virtualPageSlug)) {
-        throw new Error('Page script definition contains `data` with a `virtualPageSlug` key, but you\'re not allowed to set that yourself unless you use a string.  (And this is set to a non-string value: '+def.data.virtualPageSlug+')'); }
+        throw new Error('Page script definition contains `data` with a `virtualPageSlug` key, but you\'re not allowed to set that yourself unless you use a string.  (And this is set to a non-string value: '+def.data.virtualPageSlug+')');
       } else if (def.data && def.data.virtualPageSlug === undefined) {
         def.data = _.extend({
           virtualPageSlug: undefined
