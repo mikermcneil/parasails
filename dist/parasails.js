@@ -874,7 +874,6 @@
       // Now modify the definition's methods and remove all relevant top-level props understood
       // by parasails (but not by Vue.js) to avoid creating any weird additional dependence on
       // parasails features beyond the expected usage.
-
       def.methods = _.extend(def.methods||{}, {
         _handleVirtualNavigation: function(virtualPageSlug){
 
@@ -896,6 +895,15 @@
 
         }
       });
+
+      // Automatically attach `virtualPageSlug` to `data`, for convenience.
+      if (def.data && def.data.virtualPageSlug !== undefined && !_.isString(def.data.virtualPageSlug)) {
+        throw new Error('Page script definition contains `data` with a `virtualPageSlug` key, but you\'re not allowed to set that yourself unless you use a string.  (And this is set to a non-string value: '+def.data.virtualPageSlug+')'); }
+      } else if (def.data && def.data.virtualPageSlug === undefined) {
+        def.data = _.extend({
+          virtualPageSlug: undefined
+        }, def.data||{});
+      }//ﬁ
 
       // Now we'll replace `virtualPages` in our def with the thing that VueRouter actually expects:
       def = _.extend({
