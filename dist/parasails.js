@@ -417,6 +417,7 @@
           bottom: '0',
           height: '100%',
           width: '100%',
+          'z-index': '9000',
           display: 'table',
           'background': 'radial-gradient(circle, rgba(0,0,0,0.98) 0%, rgba(35,8,8,0.87) 80%, rgba(20,5,5,0.85) 100%)',
           // (Thanks cssgradient.io!)
