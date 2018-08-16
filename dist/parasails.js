@@ -794,7 +794,7 @@
     if (VueRouter) {
       var _virtualPagesRegExp = def.virtualPagesRegExp;
       def.methods.goto = function (rootRelativeUrlOrOpts){
-        if (_virtualPagesRegExp && _.isString(rootRelativeUrlOrOpts) && !rootRelativeUrlOrOpts.match(_virtualPagesRegExp)) {
+        if (!_virtualPagesRegExp || (_.isString(rootRelativeUrlOrOpts) && !rootRelativeUrlOrOpts.match(_virtualPagesRegExp))) {
           window.location = rootRelativeUrlOrOpts;
         } else {
           return this.$router.push(rootRelativeUrlOrOpts);
