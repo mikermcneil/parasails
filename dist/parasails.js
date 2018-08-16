@@ -636,6 +636,18 @@
       }
     };//ƒ
 
+    // Attach `goto` method, for convenience.
+    if (def.methods && def.methods.goto) { throw new Error('Component definition contains `methods` with a `goto` key-- but you\'re not allowed to override that'); }
+    def.methods = def.methods || {};
+    if (VueRouter) {
+      def.methods.goto = function (rootRelativeUrl){
+        window.location = rootRelativeUrl;
+      };
+    }
+    else {
+      def.methods.goto = function (){ throw new Error('Cannot use .goto() method because, at the time when this component was registered, VueRouter did not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure VueRouter is getting brought in before `parasails`.)'); };
+    }
+
     // Finally, register as a global Vue component.
     Vue.component(componentName, def);
 
