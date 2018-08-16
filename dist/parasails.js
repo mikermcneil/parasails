@@ -794,6 +794,8 @@
     if (VueRouter) {
       var _virtualPagesRegExp = def.virtualPagesRegExp;
       def.methods.goto = function (rootRelativeUrlOrOpts){
+        // FUTURE: add support for using '../' without reloading the page
+        // (even though it doesn't technicaly match the regexp)
         if (!_virtualPagesRegExp || (_.isString(rootRelativeUrlOrOpts) && !rootRelativeUrlOrOpts.match(_virtualPagesRegExp))) {
           window.location = rootRelativeUrlOrOpts;
         } else {
