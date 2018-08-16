@@ -706,6 +706,12 @@
     if (didAlreadyLoadPageScript) { throw new Error('Cannot load page script (`'+pageName+') because a page script has already been loaded on this page.'); }
     didAlreadyLoadPageScript = true;
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // TODO: Set `parasails._mountedPage = pageName;` and use that in the `goto` method of components to still do the
+    // check for a virtualPageRegExp and allow it to conditionaly do a "soft" client-side navigation to avoid page reload.
+    // (Remember: There's only ever one registered page script mounted in the DOM when you're using parasails.)
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     // Automatically set `el`
     if (def.el) { throw new Error('Page script definition contains `el`, but you\'re not allowed to override that'); }
     def.el = '#'+pageName;
