@@ -645,20 +645,19 @@
               // Check for file uploads.
               //
               // If `FormData` constructors is available, check to see if any
-              // of the param values are File/FileList instances (if supported).
-              // If they are, then remove them from a shallow clone of the
-              // params dictionary, and set them up separately.
-              // (The files will be attached to the request _after_
-              // the text parameters.)
+              // of the param values are File/FileList instances, or arrays of
+              // File instances. If they are, then remove them from a shallow
+              // clone of the params dictionary, and set them up separately.
+              // (The files will be attached to the request _after_ the text
+              // parameters.)
               var uploadsByFieldName = {};
               if (FormData && textParamsByFieldName) {
                 textParamsByFieldName = _.extend({}, textParamsByFieldName);
                 _.each(textParamsByFieldName, function(value, fieldName){
-                  // FUTURE: Also support passing in an array of File instances (as an alternative to a FileList)
-                  if (_.isObject(value) && ((File && value instanceof File)||(FileList && value instanceof FileList))) {
+                  if (_.isObject(value) && ((File && value instanceof File)||(FileList && value instanceof FileList)||(_.isArray(value) && _.all(value, function(item) { return File && item instanceof File; })))) {
                     uploadsByFieldName[fieldName] = value;
                     delete textParamsByFieldName[fieldName];
-                  }
+                  }//ﬁ
                 });//∞
               }//ﬁ
 
@@ -725,12 +724,12 @@
                     _.each(uploadsByFieldName, function(fileOrFileList, fieldName){
                       // Skip `undefined` values for consistency.
                       if (fileOrFileList === undefined) { return; }
-                      if (!_.isObject(fileOrFileList) || !_.isObject(fileOrFileList.constructor) || (fileOrFileList.constructor.name !== 'File' && fileOrFileList.constructor.name !== 'FileList')) {
-                        throw new Error('Cannot upload as '+fieldName+' because the provided value is not a File or FileList instance.  Instead, got:'+fileOrFileList+'\n\nNote that this can also sometimes occur due to problems with code minification (e.g. uglify configuration).');
+                      if (!_.isObject(fileOrFileList) || !_.isObject(fileOrFileList.constructor) || (fileOrFileList.constructor.name !== 'File' && fileOrFileList.constructor.name !== 'FileList' && !(_.isArray(fileOrFileList) && _.all(fileOrFileList, function(item) { return File && item instanceof File; })) ) ) {
+                        throw new Error('Cannot upload as '+fieldName+' because the provided value is not a FileList instance, a File instance, or an array of File instances.  Instead, got:'+fileOrFileList+'\n\nNote that this can also sometimes occur due to problems with code minification (e.g. uglify configuration).');
                       }
-                      if (fileOrFileList.constructor.name === 'FileList') {
+                      if (fileOrFileList.constructor.name === 'FileList' || _.isArray(fileOrFileList)) {
                         for (var i = 0; i < fileOrFileList.length; i++) {
-                          ajaxOpts.data.append(fieldName, fileOrFileList[i], fileOrFileList.name);
+                          ajaxOpts.data.append(fieldName, fileOrFileList[i], fileOrFileList[i].name);
                         }//∞
                       }
                       else {
@@ -902,7 +901,7 @@
                   if (requestInfo.params) {
                     _.each(requestInfo.params, function(value, fieldName){
                       if (_.isObject(value)) {
-                        if ((File && value instanceof File)||(FileList && value instanceof FileList)) {
+                        if ((File && value instanceof File)||(FileList && value instanceof FileList)||(_.isArray(value) && _.all(value, function(item) { return File && item instanceof File; }))) {
                           throw new Error('Detected File or FileList instance provided for the `'+fieldName+'` parameter -- but file uploads are not currently supported using this "http" pack.  Please call this method using a different request protocol.');
                         }
                       }
