@@ -478,8 +478,12 @@
     //
     // For more info about `window.onerror`, see:
     // https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
+    var originalWindowOnError = window.onerror;
     window.onerror = function(message, scriptSrc, lineNo, charNo, err) {
       _displayErrorOverlay(err&&err.message? err.message : message);
+      if (_.isFunction(originalWindowOnError)) {
+        return originalWindowOnError(message, scriptSrc, lineNo, charNo, err);
+      }
     };//œ   </ on uncaught error >
 
     // Configure Vue to share its beforeMount errors (and others) with us.
