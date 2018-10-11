@@ -1762,7 +1762,7 @@
   // > back in ~2015!)
   // =====================================================================
   if (global.location !== undefined) {
-    if (global.location && typeof global.location === 'object' && (global.location.constructor.name === 'Location' || global.location.constructor.toString() === '[object Location]')) {
+    if (global.location && typeof global.location === 'object' && (global.location.constructor.name === 'Location' || global.location.constructor.toString() === '[object Location]' || (_.isObject(global.location) && global.location.href))) {
       location = global.location;
     }
   }//ﬁ
