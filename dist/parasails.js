@@ -486,6 +486,15 @@
       }
     };//œ   </ on uncaught error >
 
+    // Bind top-level uncaught promise rejection handler.
+    // > https://developer.mozilla.org/en-US/docs/Web/Events/unhandledrejection
+    // (Only works in desktop Chrome as of Oct 2018, but over time, this will
+    // hopefully get better.  In the mean time, doesn't hurt anything, and it's
+    // only for development anyway.)
+    window.addEventListener('unhandledrejection', function (event) {
+      _displayErrorOverlay(event&&event.reason? event.reason : event);
+    });//œ  </ on unhandled promise rejection >
+
     // Configure Vue to share its beforeMount errors (and others) with us.
     // > https://vuejs.org/v2/api/#errorHandler
     Vue.config.errorHandler = function (err, unusedVm, errorSourceDisplayName) {
@@ -495,7 +504,6 @@
         } else {
           err.message = 'In '+errorSourceDisplayName+': '+err.message;
         }
-        // err.message += '\n [?] If you\'re unsure, get help: https://sailsjs.com/support';
       } else {
         var _originalNotActuallyErr = err;
         err = new Error(_originalNotActuallyErr);
@@ -505,7 +513,7 @@
       _displayErrorOverlay(err);
     };//ƒ
 
-    // Also those warnings -- but we'll treat them like errors because
+    // Also those Vue warnings -- but we'll treat them like errors because
     // we're serious about code quality.  (Plus, early detection of bugs
     // and typos saves so much time down the road!)
     // > `trace` is the component hierarchy trace
