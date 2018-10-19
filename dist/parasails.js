@@ -406,9 +406,6 @@
               '<small>This message will not be displayed in production.  '+
               'If you\'re unsure, <a href="https://sailsjs.com/support">ask for help</a>.</small><br/>'+
               '<small>'+_.escape(new Date())+'</small>'+
-              // '<br/><br/>'+
-              // '<span>High-level summary:</span>'+
-              // '<code><pre>'+_.escape(errorSummary)+'</pre></code>'+
             '</p>'+
           '</div>'+
         '</div>')

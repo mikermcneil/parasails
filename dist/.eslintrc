@@ -1,0 +1,27 @@
+{
+  //   ╔═╗╔═╗╦  ╦╔╗╔╔╦╗┬─┐┌─┐  ┌─┐┬  ┬┌─┐┬─┐┬─┐┬┌┬┐┌─┐
+  //   ║╣ ╚═╗║  ║║║║ ║ ├┬┘│    │ │└┐┌┘├┤ ├┬┘├┬┘│ ││├┤
+  //  o╚═╝╚═╝╩═╝╩╝╚╝ ╩ ┴└─└─┘  └─┘ └┘ └─┘┴└─┴└─┴─┴┘└─┘
+  //  ┌─  ┌─┐┌─┐┬─┐  ┌┐ ┬─┐┌─┐┬ ┬┌─┐┌─┐┬─┐  ─┐
+  //  │   ├┤ │ │├┬┘  ├┴┐├┬┘│ ││││└─┐├┤ ├┬┘   │
+  //  └─  └  └─┘┴└─  └─┘┴└─└─┘└┴┘└─┘└─┘┴└─  ─┘
+  // > An .eslintrc configuration override.
+  //
+  // This extends the top-level .eslintrc file to reflect where the code in this
+  // folder is designed to be run.
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  "extends": [
+    "../.eslintrc"
+  ],
+
+  "env": {
+    "browser": true,
+    "node": false
+  },
+
+  "parserOptions": {
+    "ecmaVersion": 5
+  }
+
+}
