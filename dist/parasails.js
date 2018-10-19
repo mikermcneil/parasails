@@ -644,15 +644,12 @@
     if (def.methods && def.methods.goto) { throw new Error('Component definition contains `methods` with a `goto` key-- but you\'re not allowed to override that'); }
     if (def.methods && def.methods.gotoAndReplaceHistory) { throw new Error('Component definition contains `methods` with a `gotoAndReplaceHistory` key-- but you\'re not allowed to override that'); }
     def.methods = def.methods || {};
-    def.methods.gotoAndReplaceHistory = function (){ throw new Error('Cannot use this.gotoAndReplaceHistory() method from within a component, because a component could be used on any page.  Please use .goto() instead, or refactor to instead call .gotoAndReplaceHistory() from the context of the page script.'); };
-    if (VueRouter) {
-      def.methods.goto = function (rootRelativeUrl){
-        window.location = rootRelativeUrl;
-      };
-    }
-    else {
-      def.methods.goto = function (){ throw new Error('Cannot use .goto() method because, at the time when this component was registered, VueRouter did not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure VueRouter is getting brought in before `parasails`.)'); };
-    }
+    def.methods.goto = function (rootRelativeUrl){
+      window.location = rootRelativeUrl;
+    };
+    def.methods.gotoAndReplaceHistory = function (rootRelativeUrl){
+      window.location.replace(rootRelativeUrl);
+    };
 
     // Finally, register as a global Vue component.
     Vue.component(componentName, def);
@@ -809,15 +806,21 @@
 
       // The following inline function definition exists purely to avoid
       // duplication of code in `goto` and `gotoAndReplaceHistory` below:
-      var _goto = function($router, rootRelativeUrlOrOpts, eraseHistory) {
+      var _goto = function($router, rootRelativeUrlOrOpts, replaceHistory) {
         // FUTURE: add support for using '../' without reloading the page
         // (even though it doesn't technicaly match the regexp)
         if (!_virtualPagesRegExp || (_.isString(rootRelativeUrlOrOpts) && !rootRelativeUrlOrOpts.match(_virtualPagesRegExp))) {
-          window.location = rootRelativeUrlOrOpts;
-        } else if (eraseHistory) {
-          return $router.replace(rootRelativeUrlOrOpts);
+          if (replaceHistory) {
+            window.location.replace(rootRelativeUrlOrOpts);
+          } else {
+            window.location = rootRelativeUrlOrOpts;
+          }
         } else {
-          return $router.push(rootRelativeUrlOrOpts);
+          if (replaceHistory) {
+            return $router.replace(rootRelativeUrlOrOpts);
+          } else {
+            return $router.push(rootRelativeUrlOrOpts);
+          }
         }
       };//ƒ
       def.methods.goto = function (rootRelativeUrlOrOpts){
