@@ -817,6 +817,17 @@
           }
         } else {
           if (replaceHistory) {
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            // FUTURE: also look into something like this for cleaner handling
+            // of back/forward navigation for things like permalinked modals:
+            // • https://stackoverflow.com/a/29227026/486547
+            //
+            // gotoAndReplaceHistory() works great for handling client-side
+            // redirects within an afterNavigate function, but it doesn't work
+            // great for removing stuff from the history stack.  Because that's
+            // impossible, tbh.  So to truly solve that, you need a much more
+            // opinionated solution (see above link & treeline2 for examples).
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             return $router.replace(rootRelativeUrlOrOpts);
           } else {
             return $router.push(rootRelativeUrlOrOpts);
