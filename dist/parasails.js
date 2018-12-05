@@ -2,7 +2,7 @@
  * parasails.js
  * (lightweight structures for apps with more than one page)
  *
- * v0.8.2
+ * v0.8.3-0
  *
  * Copyright 2014-present, Mike McNeil (@mikermcneil)
  * MIT License
@@ -793,14 +793,20 @@
       // Then call the original, custom "mounted" function, if there was one.
       if (customMountedLC) {
         customMountedLC.apply(this, []);
+        // ^FUTURE: consider whether it's worth dealing with the possibility
+        // of uncaught promise rejections here (b/c it might be an `async function`!)
       }
     };//ƒ
 
-    // Automatically attach `pageName` to `data`, for convenience.
+    // Now, for convenience, automatically add built-in defaults to our `data`:
     if (def.data && def.data.pageName) { throw new Error('Page script definition contains `data` with a `pageName` key, but you\'re not allowed to override that'); }
     def.data = _.extend({
-      pageName: pageName
+      pageName: pageName,
+      _: _,
     }, def.data||{});
+    if (bowser) {
+      def.data.bowser = bowser;
+    }
 
     // Attach `goto` method, for convenience.
     if (def.methods && def.methods.goto) { throw new Error('Page script definition contains `methods` with a `goto` key-- but you\'re not allowed to override that'); }
