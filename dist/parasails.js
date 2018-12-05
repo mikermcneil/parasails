@@ -2,7 +2,7 @@
  * parasails.js
  * (lightweight structures for apps with more than one page)
  *
- * v0.8.3
+ * v0.8.4
  *
  * Copyright 2014-present, Mike McNeil (@mikermcneil)
  * MIT License
@@ -804,7 +804,7 @@
       pageName: pageName,
       _: _,
     }, def.data||{});
-    if (bowser) {
+    if (bowser && !def.data.hasOwnProperty('bowser')) {
       def.data.bowser = bowser;
     }
 
