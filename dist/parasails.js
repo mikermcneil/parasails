@@ -2,7 +2,7 @@
  * parasails.js
  * (lightweight structures for apps with more than one page)
  *
- * v0.8.3-0
+ * v0.8.3
  *
  * Copyright 2014-present, Mike McNeil (@mikermcneil)
  * MIT License
