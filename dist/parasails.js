@@ -808,6 +808,13 @@
       def.data.bowser = bowser;
     }
 
+    // And, as of Parasails ≥0.9, automatically merge in the contents of SAILS_LOCALS, if present.
+    // > (this is so that you don't have to include boilerplate code inside beforeMount of page scripts
+    // > to merge in data from the server)
+    if (typeof window !== 'undefined' && _.isObject(window.SAILS_LOCALS) && !_.isArray(window.SAILS_LOCALS) && !_.isFunction(window.SAILS_LOCALS)) {
+      _.extend(def.data, window.SAILS_LOCALS);
+    }
+
     // Attach `goto` method, for convenience.
     if (def.methods && def.methods.goto) { throw new Error('Page script definition contains `methods` with a `goto` key-- but you\'re not allowed to override that'); }
     if (def.methods && def.methods.gotoAndReplaceHistory) { throw new Error('Page script definition contains `methods` with a `gotoAndReplaceHistory` key-- but you\'re not allowed to override that'); }
