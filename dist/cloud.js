@@ -708,13 +708,14 @@
                   // > in order to support order-aware body parsers
                   // > that rely on pessimistic upstream awareness,
                   // > optimizing uploads and preventing DDoS attacks.
+                  // >
+                  // > Also note that we skip text params and file fields w/
+                  // > `undefined` values for consistency w/ Sails conventions.
                   else if (_.keys(uploadsByFieldName).length > 0){
                     ajaxOpts.processData = false;
                     ajaxOpts.contentType = false;
                     ajaxOpts.data = new FormData();
                     _.each(textParamsByFieldName, function(value, fieldName){
-                      // Skip `undefined` values to more accurately mirror
-                      // the behavior of JSON.stringify()
                       if (value === undefined) { return; }
                       if (_.isObject(value)) {
                         throw new Error('Could not encode value provided for '+fieldName+' because this request also contains file uploads.  In a request that contains one or more file uploads, any additional text parameter values must be primitives (strings, numbers, booleans, or `null`).  To encode complex structures like dictionaries and arrays, bust them apart into separate fields before sending the request, or use JSON.stringify() in front-end userland code to encode the data into a string before transmitting.  (If you go with the latter option, just be sure to also expect and decode the string value accordingly using JSON.parse() in your backend code).');
@@ -722,7 +723,6 @@
                       ajaxOpts.data.append(fieldName, value);
                     });
                     _.each(uploadsByFieldName, function(fileOrFileList, fieldName){
-                      // Skip `undefined` values for consistency.
                       if (fileOrFileList === undefined) { return; }
                       if (!_.isObject(fileOrFileList) || !_.isObject(fileOrFileList.constructor) || (fileOrFileList.constructor.name !== 'File' && fileOrFileList.constructor.name !== 'FileList' && !(_.isArray(fileOrFileList) && fileOrFileList.length > 0 && _.all(fileOrFileList, function(item) { return File && item instanceof File; })) ) ) {
                         throw new Error('Cannot upload as '+fieldName+' because the provided value is not a FileList instance, a File instance, or an array of File instances.  Instead, got:'+fileOrFileList+'\n\nNote that this can also sometimes occur due to problems with code minification (e.g. uglify configuration).');
