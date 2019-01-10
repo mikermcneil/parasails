@@ -644,7 +644,7 @@
 
               // Check for file uploads.
               //
-              // If `FormData` constructors is available, check to see if any
+              // If `FormData` constructor is available, check to see if any
               // of the param values are File/FileList instances, or arrays of
               // File instances. If they are, then remove them from a shallow
               // clone of the params dictionary, and set them up separately.
@@ -739,7 +739,33 @@
                   }
                   // Otherwise, attach params as a JSON-encoded request body.
                   else {
-                    ajaxOpts.data = JSON.stringify(textParamsByFieldName);
+                    // If any of our text params are arrays, then before stringifying,
+                    // make a shallow clone and strip out any `undefined` values
+                    // that exist as items at the top level of the array.  (This
+                    // prevents them from automatically being changed into `null`
+                    // by JSON.stringify().)
+                    // > (This behavior is a breaking change that was introduced
+                    // > in parasails@0.9.0)
+                    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                    // > FUTURE: Instead, do a deep crawl and mimic the behavior of RTTC:
+                    // > https://github.com/node-machine/rttc/blob/8a84191dc786e872a6c28b24566539573b2a2c4d/lib/helpers/rebuild-recursive.js#L77-L90
+                    // > ^^That'll take care of several other common edge cases that
+                    // > are handled in a kinda strange way by JSON.stringify(),
+                    // > including `NaN`, etc.
+                    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                    var sanitizedTPBFN = _.mapValues(textParamsByFieldName, function(value) {
+                      var sanitizedValue;
+                      if (_.isArray(value)) {
+                        sanitizedValue = _.clone(value);
+                        _.remove(sanitizedValue, function(item){
+                          return item === undefined;
+                        });//∞
+                      } else {
+                        sanitizedValue = value;
+                      }
+                      return sanitizedValue;
+                    });
+                    ajaxOpts.data = JSON.stringify(sanitizedTPBFN);
                     ajaxOpts.processData = false;
                     ajaxOpts.contentType = 'application/json; charset=UTF-8';
                   }
