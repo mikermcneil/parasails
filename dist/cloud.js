@@ -58,6 +58,30 @@
 
 
   /**
+   * @param  {Ref} that
+   *
+   * @throws {Error} If that is not a File instance, a FileList instance, an
+   *                 array of File instances, a special File wrapper, or an
+   *                 array of special File wrappers.  (Note that, if an array is
+   *                 provided, this function will only return true if the array
+   *                 consists of ≥1 item.)
+   */
+  function _representsOneOrMoreFiles(that) {
+    // FUTURE: add support for Blobs
+    return (
+      _.isObject(that) &&
+      (
+        (File? that instanceof File : false)||
+        (FileList? that instanceof FileList : false)||
+        (_.isArray(that) && that.length > 0 && _.all(that, function(item) { return File? _.isObject(item) && item instanceof File : false; }))||
+        (File? _.isObject(that) && _.isObject(that.file) && that instanceof File : false)||
+        (_.isArray(that) && that.length > 0 && _.all(that, function(item) { return File? _.isObject(item) && _.isObject(item.file) && item instanceof File : false; }))
+      )
+    );
+  }//ƒ
+
+
+  /**
    * @param  {String} negotiationRule
    *
    * @throws {Error} If rule is invalid or absent
@@ -646,7 +670,8 @@
               //
               // If `FormData` constructor is available, check to see if any
               // of the param values are File/FileList instances, or arrays of
-              // File instances. If they are, then remove them from a shallow
+              // File instances, or special File wrappers, or arrays of special
+              // File wrappers. If they are, then remove them from a shallow
               // clone of the params dictionary, and set them up separately.
               // (The files will be attached to the request _after_ the text
               // parameters.)
@@ -654,10 +679,10 @@
               if (FormData && textParamsByFieldName) {
                 textParamsByFieldName = _.extend({}, textParamsByFieldName);
                 _.each(textParamsByFieldName, function(value, fieldName){
-                  if (_.isObject(value) && ((File && value instanceof File)||(FileList && value instanceof FileList)||(_.isArray(value) && value.length > 0 && _.all(value, function(item) { return File && item instanceof File; })))) {
+                  if (_representsOneOrMoreFiles(value)) {
                     uploadsByFieldName[fieldName] = value;
                     delete textParamsByFieldName[fieldName];
-                  }//ﬁ
+                  }
                 });//∞
               }//ﬁ
 
@@ -724,18 +749,26 @@
                     });
                     _.each(uploadsByFieldName, function(fileOrFileList, fieldName){
                       if (fileOrFileList === undefined) { return; }
-                      if (!_.isObject(fileOrFileList) || !_.isObject(fileOrFileList.constructor) || (fileOrFileList.constructor.name !== 'File' && fileOrFileList.constructor.name !== 'FileList' && !(_.isArray(fileOrFileList) && fileOrFileList.length > 0 && _.all(fileOrFileList, function(item) { return File && item instanceof File; })) ) ) {
-                        throw new Error('Cannot upload as '+fieldName+' because the provided value is not a FileList instance, a File instance, or an array of File instances.  Instead, got:'+fileOrFileList+'\n\nNote that this can also sometimes occur due to problems with code minification (e.g. uglify configuration).');
+                      if (!_representsOneOrMoreFiles(fileOrFileList)) {
+                        throw new Error('Cannot upload as "'+fieldName+'" because the provided value is not a File instance, an array of File instances, a dictionary like `{file: someFileInstance, name: \'filename-override.png\'}`, or an array of such wrapper dictionaries.  Instead, got: '+fileOrFileList+'\n\nNote that this can sometimes occur due to problems with code minification (e.g. uglify configuration).');
                       }
-                      if (fileOrFileList.constructor.name === 'FileList' || _.isArray(fileOrFileList)) {
+                      if (_.isArray(fileOrFileList) || (_.isObject(fileOrFileList) && _.isObject(fileOrFileList.constructor) && fileOrFileList.constructor.name === 'FileList')) {
                         for (var i = 0; i < fileOrFileList.length; i++) {
-                          ajaxOpts.data.append(fieldName, fileOrFileList[i], fileOrFileList[i].name);
+                          if (fileOrFileList[i] instanceof File) {
+                            ajaxOpts.data.append(fieldName, fileOrFileList[i], fileOrFileList[i].name);
+                          } else {
+                            ajaxOpts.data.append(fieldName, fileOrFileList[i].file, fileOrFileList[i].name||fileOrFileList[i].file.name);
+                          }
                         }//∞
                       }
                       else {
-                        ajaxOpts.data.append(fieldName, fileOrFileList, fileOrFileList.name);
+                        if (fileOrFileList instanceof File) {
+                          ajaxOpts.data.append(fieldName, fileOrFileList, fileOrFileList.name);
+                        } else {
+                          ajaxOpts.data.append(fieldName, fileOrFileList.file, fileOrFileList.name||fileOrFileList.file.name);
+                        }
                       }
-                    });
+                    });//∞
                   }
                   // Otherwise, attach params as a JSON-encoded request body.
                   else {
@@ -850,15 +883,12 @@
 
                   var socket = requestInfo.protocolInstance;
 
-                  // If `File` constructor is available, check to be sure
-                  // that none of the parameter values are File instances.
-                  // > Note that if the File constructor is NOT available,
-                  // > then we don't even bother checking (it's not like it
-                  // > would work anyway!)
+                  // Check to be sure that none of the parameter values are
+                  // attempted file uploads.
                   if (File && requestInfo.params) {
                     _.each(requestInfo.params, function(value, fieldName){
-                      if (_.isObject(value) && value instanceof File) {
-                        throw new Error('Detected File instance provided for the `'+fieldName+'` parameter -- but file uploads are not currently supported using WebSockets / Socket.io.  Please call this method using a different request protocol (e.g. `protocol: \'jQuery\'`)');
+                      if (_representsOneOrMoreFiles(value)) {
+                        throw new Error('Detected File-like data provided for the "'+fieldName+'" parameter -- but file uploads are not currently supported using WebSockets / Socket.io.  Please call this method using a different request protocol (e.g. `protocol: \'jQuery\'`)');
                       }
                     });
                   }//ﬁ
@@ -921,15 +951,10 @@
 
                   // If there are request parameters, check to be sure
                   // that none of the parameter values are File instances.
-                  // > Note that if the File constructor is NOT available,
-                  // > then we don't even bother checking (it's not like it
-                  // > would work anyway!)
                   if (requestInfo.params) {
                     _.each(requestInfo.params, function(value, fieldName){
-                      if (_.isObject(value)) {
-                        if ((File && value instanceof File)||(FileList && value instanceof FileList)||(_.isArray(value) && value.length > 0 && _.all(value, function(item) { return File && item instanceof File; }))) {
-                          throw new Error('Detected File or FileList instance provided for the `'+fieldName+'` parameter -- but file uploads are not currently supported using this "http" pack.  Please call this method using a different request protocol.');
-                        }
+                      if (_representsOneOrMoreFiles(value)) {
+                        throw new Error('Detected File-like data provided for the "'+fieldName+'" parameter -- but file uploads are not currently supported in Cloud SDK when using "machinepack-http".  Please call this method using a different request protocol.');
                       }
                     });//∞
                   }//ﬁ
