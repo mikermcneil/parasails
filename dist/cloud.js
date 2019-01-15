@@ -74,8 +74,8 @@
         (File? that instanceof File : false)||
         (FileList? that instanceof FileList : false)||
         (_.isArray(that) && that.length > 0 && _.all(that, function(item) { return File? _.isObject(item) && item instanceof File : false; }))||
-        (File? _.isObject(that) && _.isObject(that.file) && that instanceof File : false)||
-        (_.isArray(that) && that.length > 0 && _.all(that, function(item) { return File? _.isObject(item) && _.isObject(item.file) && item instanceof File : false; }))
+        (File? _.isObject(that) && _.isObject(that.file) && that.file instanceof File : false)||
+        (_.isArray(that) && that.length > 0 && _.all(that, function(item) { return File? _.isObject(item) && _.isObject(item.file) && item.file instanceof File : false; }))
       )
     );
   }//ƒ
@@ -752,6 +752,10 @@
                       if (!_representsOneOrMoreFiles(fileOrFileList)) {
                         throw new Error('Cannot upload as "'+fieldName+'" because the provided value is not a File instance, an array of File instances, a dictionary like `{file: someFileInstance, name: \'filename-override.png\'}`, or an array of such wrapper dictionaries.  Instead, got: '+fileOrFileList+'\n\nNote that this can sometimes occur due to problems with code minification (e.g. uglify configuration).');
                       }
+                      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                      // FUTURE: throw usage error if wrapper (i.e. with `.file`) has a `.name`, override,
+                      // but it isn't a valid string  (i.e. truthy, decent chars, & not too long)
+                      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                       if (_.isArray(fileOrFileList) || (_.isObject(fileOrFileList) && _.isObject(fileOrFileList.constructor) && fileOrFileList.constructor.name === 'FileList')) {
                         for (var i = 0; i < fileOrFileList.length; i++) {
                           if (fileOrFileList[i] instanceof File) {
