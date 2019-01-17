@@ -2,7 +2,7 @@
  * parasails.js
  * (lightweight structures for apps with more than one page)
  *
- * v0.9.0-2
+ * v0.9.0-3
  *
  * Copyright 2014-present, Mike McNeil (@mikermcneil)
  * MIT License
@@ -176,7 +176,7 @@
         'methods',
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        // TODO: Add `this.listen()` and `this.ignore()` -- see:
+        // FUTURE: Add `this.listen()` and `this.ignore()` -- see:
         // https://github.com/mikermcneil/parasails/commit/5b948a1a8a0945b19ccea6da3e7354255d3dc0b6
         // (and also 83c439dc1f3a0375e67066fffe9151581cbab639)
         //
@@ -715,9 +715,9 @@
     didAlreadyLoadPageScript = true;
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // TODO: Set `parasails._mountedPage = pageName;` and use that in the `goto` method of components to still do the
-    // check for a virtualPageRegExp and allow it to conditionaly do a "soft" client-side navigation to avoid page reload.
-    // (Remember: There's only ever one registered page script mounted in the DOM when you're using parasails.)
+    // FUTURE: Maybe set `parasails._mountedPage = pageName;` and use that in the `goto` method of components to still
+    // do the check for a virtualPageRegExp and allow it to conditionaly do a "soft" client-side navigation to avoid page
+    // reload. (Remember: There's only ever one registered page script mounted in the DOM when you're using parasails.)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     // Automatically set `el`
