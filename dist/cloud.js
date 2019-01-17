@@ -741,17 +741,18 @@
                   // > `undefined` values for consistency w/ Sails conventions.
                   //
                   // > Finally, one last thing to consider:
-                  // > If a value is NOT a dictionary or array, then we simply
-                  // > attach it to the body as form data.  But otherwise,
-                  // > we have to do something fancy to get it to be losslessly
-                  // > encoded for use in backend code.
+                  // > If a value is NOT something that needs special encoding
+                  // > to accurately capture its meaning and data type (e.g. if
+                  // > it is a string), then we simply attach it to the body as
+                  // > form data.  But otherwise, we have to do something fancy
+                  // > to get it to be losslessly encoded for use in backend code.
                   else if (_.keys(uploadsByFieldName).length > 0){
                     ajaxOpts.processData = false;
                     ajaxOpts.contentType = false;
                     ajaxOpts.data = new FormData();
                     _.each(textParamsByFieldName, function(value, fieldName){
                       if (value === undefined) { return; }//•
-                      if (!_.isObject(value) || _.isFunction(value)) {
+                      if (_.isString(value)) {
                         ajaxOpts.data.append(fieldName, value);
                       } else {
                         // Use the "X-JSON-MPU-Params" header to signal to the
@@ -779,7 +780,7 @@
                           stringifiedValue = JSON.stringify(value);
                         } catch (unusedErr) {
                           var errMsgPrefix = 'Could not encode value provided for '+fieldName+' because the value is (or contains) ';
-                          var errMsgSuffix = '.  In a request that contains one or more file uploads, any additional text parameter values must either be primitives (strings, numbers, booleans, or `null`), or complex structures (arrays, dictionaries) that can be losslessly parsed by the Sails framework using the JSON format.\n [?] Unsure?  Reach out at https://sailsjs.com/support';
+                          var errMsgSuffix = '.  In a request that contains one or more file uploads, any additional text parameter values need to be encoded in such a way that they can be losslessly parsed by the Sails framework.\n [?] Unsure?  Reach out at https://sailsjs.com/support';
                           throw new Error(errMsgPrefix+'data that cannot be stringified as JSON (usually, this means it contains circular references-- i.e. its properties or array items are actually references to itself, or each other)'+errMsgSuffix);
                         }
                         ajaxOpts.data.append(fieldName, stringifiedValue);
