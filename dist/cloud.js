@@ -743,88 +743,49 @@
                   // > Finally, one last thing to consider:
                   // > If a value is NOT a dictionary or array, then we simply
                   // > attach it to the body as form data.  But otherwise,
-                  // > we recursively iterate over the value and encode it in
-                  // > the URL query string.
+                  // > we have to do something fancy to get it to be losslessly
+                  // > encoded for use in backend code.
                   else if (_.keys(uploadsByFieldName).length > 0){
                     ajaxOpts.processData = false;
                     ajaxOpts.contentType = false;
                     ajaxOpts.data = new FormData();
-                    var newQsParams = {};
                     _.each(textParamsByFieldName, function(value, fieldName){
                       if (value === undefined) { return; }//•
                       if (!_.isObject(value) || _.isFunction(value)) {
                         ajaxOpts.data.append(fieldName, value);
                       } else {
-                        var errMsgPrefix = 'Could not encode value provided for '+fieldName+' because the value is (or contains) ';
-                        var errMsgSuffix = '.  In a request that contains one or more file uploads, any additional text parameter values must either be primitives (strings, numbers, booleans, or `null`), or complex structures (arrays, dictionaries) that can be losslessly parsed by the Sails framework (via Skipper, Express, and the `qs` NPM package -- see https://www.npmjs.com/package/qs for more information).  To work around this limitation, bust apart complex structures into separate fields before sending the request, or use JSON.stringify() in front-end userland code to encode the data into a string before transmitting.  (If you go with the latter option, just be sure to also expect and decode the string value accordingly using JSON.parse() in your backend code).\n [?] Unsure?  Reach out at https://sailsjs.com/support';
-                        (function recurse(value, qsParamNameSoFar, depth){
-                          // Important note about booleans and numbers:
-                          // ==========================================
-                          // Beware!  Booleans and numbers are not 100% losslessly
-                          // encoded (they come through as their string equivalents),
-                          // but this lossiness is permitted, because it generally
-                          // comes out in the wash.  That's because, as long as
-                          // corresponding server-side code is using actions2 w/
-                          // e.g. `type: 'number'`/`type: 'boolean'` inputs defined,
-                          // stringy values will be automatically parsed into
-                          // their number or boolean equivalents before any code
-                          // in the action's `fn` is actually run.
-                          //
-                          // But bear in mind that numbers and booleans (whether
-                          // at the top level or deeply nested in {}s or []s) will
-                          // still be understood as strings UNLESS the type schema
-                          // is strictly defined on corresponding input(s).
-                          // For example, `[45,99]` will be understood on the server
-                          // as `['45','99']` unless the input is defined with
-                          // `type: ['number']`.
-                          //
-                          // More information
-                          // ================
-                          // The `qs` README is probably the best resource for
-                          // understanding why we're doing things the way we are here.
-                          // In addition for a few other edge cases that aren't
-                          // super relevant here, see also: https://github.com/sailshq/machine-as-action/blob/86de0e6c2326b9aa1053e3cea436f9000dcca6fc/lib/machine-as-action.js#L399-L409
-                          //
-                          // Implementation notes
-                          // ====================
-                          // > FUTURE: complain if unsupported special characters are detected (see https://www.npmjs.com/package/qs#dealing-with-special-character-sets)
-                          if (depth > 5) {
-                            throw new Error(errMsgPrefix+'an array or dictionary that is more than 5 levels deep'+errMsgSuffix);
-                          } else if (_.isArray(value) && value.length > 20) {
-                            throw new Error(errMsgPrefix+'an array with > 20 items'+errMsgSuffix);
-                          } else if (_.isEqual(value, [])) {
-                            throw new Error(errMsgPrefix+'an empty array ([])'+errMsgSuffix);
-                          } else if (_.isEqual(value, {})) {
-                            throw new Error(errMsgPrefix+'an empty dictionary ({})'+errMsgSuffix);
-                          } else if (value === null) {
-                            throw new Error(errMsgPrefix+'the `null` literal, which is not accurately preserved when decoded on the server (it is instead understood as empty string)'+errMsgSuffix);
-                          } else if (value === Infinity || value === -Infinity || _.isNaN(value)) {
-                            throw new Error(errMsgPrefix+'a wacky number ('+value+')'+errMsgSuffix);
-                          } else if (_.isArray(value)) {
-                            _.each(value, function(item){
-                              // Ignore undefined array items (effectively stripping them out)
-                              if (item !== undefined) {
-                                recurse(item, qsParamNameSoFar + '[]', depth + 1);
-                              }
-                            });//∞
-                          } else if (_.isObject(value) && !_.isFunction(value)) {
-                            _.each(value, function(rhs, key){
-                              // Ignore keys w/ undefined values (effectively stripping them out)
-                              if (rhs !== undefined) {
-                                recurse(rhs, qsParamNameSoFar + '['+key+']', depth + 1);
-                              }
-                            });//∞
-                          } else {
-                            newQsParams[qsParamNameSoFar] = value;
-                          }
-                        })(value, fieldName, 0);//‰
+                        // Use the "X-JSON-MPU-Params" header to signal to the
+                        // server that this text param is encoded as stringified
+                        // JSON, even though the request's content type would
+                        // suggest otherwise (because it's multipart/form-data
+                        // in order to handle file uploads).
+                        //
+                        // > This is "the new way" of solving this problem.
+                        // > For more info about "the old way" of "solving" this
+                        // > that didn't really work for everything (i.e. doing
+                        // > a recursive dive over the value and attempting to
+                        // > losslessly encode it in the URL query string), see:
+                        // > https://github.com/mikermcneil/parasails/commit/28732b1ed55eb4697de4bf4c559f0319cf773041
+                        requestInfo.headers = requestInfo.headers||{};
+                        if (requestInfo.headers['X-JSON-MPU-Params']) {
+                          requestInfo.headers['X-JSON-MPU-Params'] += ','+fieldName;
+                        } else {
+                          requestInfo.headers['X-JSON-MPU-Params'] = fieldName;
+                        }
+
+                        // FUTURE: do a deep-crawl to sanitize prior to stringification (as alluded to below) -- i.e. to strip undefined array items, etc
+                        var stringifiedValue;
+                        try {
+                          stringifiedValue = JSON.stringify(value);
+                        } catch (unusedErr) {
+                          var errMsgPrefix = 'Could not encode value provided for '+fieldName+' because the value is (or contains) ';
+                          var errMsgSuffix = '.  In a request that contains one or more file uploads, any additional text parameter values must either be primitives (strings, numbers, booleans, or `null`), or complex structures (arrays, dictionaries) that can be losslessly parsed by the Sails framework using the JSON format.\n [?] Unsure?  Reach out at https://sailsjs.com/support';
+                          throw new Error(errMsgPrefix+'data that cannot be stringified as JSON (usually, this means it contains circular references-- i.e. its properties or array items are actually references to itself, or each other)'+errMsgSuffix);
+                        }
+                        ajaxOpts.data.append(fieldName, stringifiedValue);
                       }
                     });//∞
-                    if (_.keys(newQsParams).length > 0) {
-                      ajaxOpts.url += '?' + _.map(_.keys(newQsParams), function (qsParamName) {
-                        return encodeURIComponent(qsParamName) + '=' + encodeURIComponent(newQsParams[qsParamName]);
-                      }).join('&');
-                    }//ﬁ
+
                     _.each(uploadsByFieldName, function(fileOrFileList, fieldName){
                       if (fileOrFileList === undefined) { return; }
                       if (!_representsOneOrMoreFiles(fileOrFileList)) {
@@ -885,7 +846,8 @@
                     ajaxOpts.contentType = 'application/json; charset=UTF-8';
                   }
 
-                  if (typeof requestInfo.headers !== 'undefined') {
+                  // Attach headers so they'll be included in our $.ajax() call.
+                  if (requestInfo.headers !== undefined) {
                     ajaxOpts.headers = requestInfo.headers;
                   }
 
