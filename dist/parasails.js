@@ -110,6 +110,7 @@
         if ($rootEl.length !== 1) { throw new Error('Cannot use .$focus() - something is wrong with this '+currentModuleEntityNoun+'\'s top-level DOM element.  (It probably has not mounted yet!)'); }
         var $fieldToAutoFocus = $rootEl.find(subSelector);
         if ($fieldToAutoFocus.length === 0) { throw new Error('Could not autofocus-- no such element exists within this '+currentModuleEntityNoun+'.'); }
+        // FUTURE: ^^ if that happens, try calling await this.forceRender() and then try again one more time before giving up
         if ($fieldToAutoFocus.length > 1) { throw new Error('Could not autofocus `'+subSelector+'`-- too many elements matched!'); }
         $fieldToAutoFocus.focus();
       };
