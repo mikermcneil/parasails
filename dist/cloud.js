@@ -229,15 +229,20 @@
   var Cloud = {};
 
 
+  // FUTURE:  Cloud.getUrlFor()
+  // (similar to https://sailsjs.com/documentation/reference/application/sails-get-url-for)
+  // (but would def need to provide a way of providing values for URL pattern variables like `:id`)
+
+
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  // FUTURE: finish this when time allows   (would be better to have it work by attaching dedicated
+  // FUTURE: finish this when time allows   (might be better to have it work by attaching dedicated
   // nav methods rather than a generic nav method though)
   // ```
   // // A mapping of names of view actions to URL
   // // > provided to `.setup()`, for use in .navigate()
   // var _navigableUrlsByViewActionName;
-
-
+  //
+  //
   // /**
   //  * Cloud.navigate()
   //  *
