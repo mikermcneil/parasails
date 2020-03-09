@@ -651,7 +651,20 @@
     if (def.methods && def.methods.gotoAndReplaceHistory) { throw new Error('Component definition contains `methods` with a `gotoAndReplaceHistory` key-- but you\'re not allowed to override that'); }
     def.methods = def.methods || {};
     def.methods.goto = function (rootRelativeUrl){
-      window.location = rootRelativeUrl;
+      // If the Bowser browser detection library is installed
+      // (https://github.com/lancedikson/bowser/releases), check whether
+      // we're in Edge or IE, in which case we'll add some special handling
+      // for `onbeforeunload` behavior.
+      var isIEOrEdgeBrowser = typeof bowser === 'object' && bowser && (bowser.name === 'Internet Explorer' || bowser.name === 'Microsoft Edge');
+      if(!isIEOrEdgeBrowser) {
+        window.location = rootRelativeUrl;
+      } else {
+        try {
+          window.location.href = rootRelativeUrl;
+        } catch(err) {
+          throw new Error('`goto` failed in Edge or IE! If navigation was cancelled in `beforeunload`, you can probably ignore this message (see https://stackoverflow.com/questions/1509643/unknown-exception-when-cancelling-page-unload-with-location-href/1510074#1510074).');
+        }
+      }
     };
     def.methods.gotoAndReplaceHistory = function (rootRelativeUrl){
       window.location.replace(rootRelativeUrl);
