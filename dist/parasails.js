@@ -654,14 +654,16 @@
       // If the Bowser browser detection library is installed
       // (https://github.com/lancedikson/bowser/releases), check whether
       // we're in Edge or IE, in which case we'll add some special handling
-      // for `onbeforeunload` behavior.
-      var isIEOrEdgeBrowser = typeof bowser === 'object' && bowser && (bowser.name === 'Internet Explorer' || bowser.name === 'Microsoft Edge');
+      // for an edge case in `onbeforeunload` behavior.
+      var isIEOrEdgeBrowser = bowser && (bowser.name === 'Internet Explorer' || bowser.name === 'Microsoft Edge');
       if(!isIEOrEdgeBrowser) {
         window.location = rootRelativeUrl;
       } else {
         try {
+          // IE/Edge prefers "window.location.href"
           window.location.href = rootRelativeUrl;
         } catch(err) {
+          // More helpful error message for unavoidable error during onbeforeunload edge case in IE/Edge
           throw new Error('`goto` failed in Edge or IE! If navigation was cancelled in `beforeunload`, you can probably ignore this message (see https://stackoverflow.com/questions/1509643/unknown-exception-when-cancelling-page-unload-with-location-href/1510074#1510074).');
         }
       }
