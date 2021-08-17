@@ -724,10 +724,21 @@
     if (!def) { throw new Error('2nd argument (page script definition) is required'); }
 
     // Don't look for a matching DOM element (by "id") within anything that has `parasails-has-no-page-script`
-    var elementsToIgnoreWithin = $('#'+pageName).parents().filter('[parasails-has-no-page-script]');
+    // FUTURE: Move this check a bit further below, probably without defining the variable, and just add another avast (aka early return)
+    var isWithinIgnoredElements;
+    if ($) {
+      // Note that, luckily, this works even without waiting for the DOM to be ready according to jQuery.  (i.e. $(()=>{ … }))
+      isWithinIgnoredElements = (
+        $('#'+pageName).parents().filter('[parasails-has-no-page-script]')
+      ).length >= 1;
+    } else {
+      // For simplicity, this check is skipped if jQuery is not available.
+      // FUTURE: Implement with vanilla JS here
+      isWithinIgnoredElements = false;
+    }
 
     // Only actually build+load this page script if it is relevant for the current contents of the DOM.
-    if (!window.document.getElementById(pageName) || elementsToIgnoreWithin.length >= 1) { return; }
+    if (!window.document.getElementById(pageName) || isWithinIgnoredElements) { return; }
 
     // Spinlock
     if (didAlreadyLoadPageScript) { throw new Error('Cannot load page script (`'+pageName+') because a page script has already been loaded on this page.'); }
