@@ -167,7 +167,7 @@
     // > This is particularly useful for catching loose top-level properties
     // > that were intended to be within `data` or `methods`, etc.)
     if (currentModuleEntityNoun === 'page script' || currentModuleEntityNoun === 'component') {
-      // FUTURE: don't allow page-script only things on components
+      // FUTURE: don't allow page script only things on components
 
       var LEGAL_TOP_LVL_KEYS = [
         // Everyday page script stuff:
@@ -723,7 +723,7 @@
     if (!pageName) { throw new Error('1st argument (page name) is required'); }
     if (!def) { throw new Error('2nd argument (page script definition) is required'); }
 
-    // Don't look for a matching page-script for elements that share an id with a page (checking for a `parasails-has-no-page-script` attribute)
+    // Don't look for a matching DOM element (by "id") within anything that has `parasails-has-no-page-script`
     var domsToIgnore = $('#'+pageName).parents().filter('[parasails-has-no-page-script]');
 
     // Only actually build+load this page script if it is relevant for the current contents of the DOM.
