@@ -724,10 +724,10 @@
     if (!def) { throw new Error('2nd argument (page script definition) is required'); }
 
     // Don't look for a matching DOM element (by "id") within anything that has `parasails-has-no-page-script`
-    var domsToIgnore = $('#'+pageName).parents().filter('[parasails-has-no-page-script]');
+    var elementsToIgnoreWithin = $('#'+pageName).parents().filter('[parasails-has-no-page-script]');
 
     // Only actually build+load this page script if it is relevant for the current contents of the DOM.
-    if (!document.getElementById(pageName) || domsToIgnore.length >= 1) { return; }//eslint-disable-line no-undef
+    if (!window.document.getElementById(pageName) || elementsToIgnoreWithin.length >= 1) { return; }
 
     // Spinlock
     if (didAlreadyLoadPageScript) { throw new Error('Cannot load page script (`'+pageName+') because a page script has already been loaded on this page.'); }
